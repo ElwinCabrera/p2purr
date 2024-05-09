@@ -8,7 +8,7 @@
 #include <cstdlib> // for exit() and EXIT_FAILURE
 #include <sys/types.h>
 #include <memory>  // for std::unique_ptr<T> var_name(new T)
-//#include <thread>
+#include <thread>
 #include <algorithm>
 #include<cstring>
 
@@ -135,6 +135,7 @@ public:
   ~LocalPeer();
   void connect_to_peer(string host, uint16_t port);
   void send_data_to_peer(string host, string data);
+  void check_for_msgs();
   void handle_client(string ipaddr, int port, int client_sock);
   void close_all_connections();
   void stop_server();
