@@ -8,28 +8,33 @@
 //TODO: change NULL to nullptr
 
 
-
-
-
-/****************************************************************************************************************************************/
-
 vector<unique_ptr<LocalPeer>> test_peers;
 vector<thread> threads;
 
 
 
 
+void init_main_server_thread(){
+
+  for(int i = 0; i < test_peers.size(); i++){
+    test_peers.at(i)->start_server();
+  }
+
+  //test_peers.at(test_peers.size() -1)->start_server();
+}
+
 void sig_handler(int s){
-  printf("\nCaught signal %d\n",s);
-  printf("SIGINT or CTRL-C detected. Exiting gracefully\n");
-
-
+  printf("\nCaught signal(%d) SIGINT. Exiting gracefully\n", s);
 
   for(int i = 0; i < test_peers.size(); i++){
     test_peers.at(i)->stop_server();
   }
 
   test_peers.clear();
+
+  for(auto& t: threads){
+    t.join();
+  }
 
   exit(1); 
 
@@ -83,6 +88,7 @@ Packet to_pkt(string payload){
 
 
 void init_test_peer(string bind_addr, int bind_port, string local_peer_name="", string other_peer_addr="", int other_peer_port=-1, string data_to_send=""){
+  
   if (local_peer_name == ""){
     local_peer_name = bind_addr + ":" + to_string(bind_port);
   }
@@ -100,45 +106,39 @@ void init_test_peer(string bind_addr, int bind_port, string local_peer_name="", 
 
     Packet pkt1 = to_pkt(data_to_send.c_str());
     Packet pkt2 = to_pkt(data_to_send + " x2\0");
-    Packet pkt3 = to_pkt("1Small data null terminated\0");
-    Packet pkt4 = to_pkt("2Small data not null terminated");
-    Packet pkt5 = to_pkt("3 maybe this will continue here since previous data was not null terminated ?\0");
-    Packet pkt6 = to_pkt("4Now I am just going to write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.\0");
-    Packet pkt7 = to_pkt("5Sending the same data as before. Now I am just going to with a random null terminator HERE write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.\0");
-    Packet pkt8 = to_pkt("6Sending something really long while a single recv call accepts fewer bytes than what I am sending now THE FOLLOWING IS A REPEAT OF THE LAST TRANSMISSION 'Sending the same data as before. Now I am just going to write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.'\0");
+    Packet pkt3 = to_pkt("1. Small data null terminated\0");
+    Packet pkt4 = to_pkt("2. Small data not null terminated");
+    Packet pkt5 = to_pkt("3. maybe this will continue here since previous data was not null terminated ?\0");
+    Packet pkt6 = to_pkt("4. Now I am just going to write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.\0");
+    Packet pkt7 = to_pkt("5. Sending the same data as before. Now I am just going to with a random null terminator HERE write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.\0");
+    Packet pkt8 = to_pkt("6. Sending something really long while a single recv call accepts fewer bytes than what I am sending now THE FOLLOWING IS A REPEAT OF THE LAST TRANSMISSION 'Sending the same data as before. Now I am just going to write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.'\0");
 
     
 
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt1);
-    sleep(20);
+    sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt2);
-    sleep(20);
+    sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt3);
-     sleep(20);
+     sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt4);
     //sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt5);
-    sleep(20);
+    sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt6);
-    sleep(20);
+    sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt7);
-    sleep(20);
+    sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt8);
   }
 
-  
-  //thread t1(&LocalPeer::start_server, test_peers.at(test_peers.size() -1));
-  //thread t2(&LocalPeer::check_for_msgs, test_peers.at(test_peers.size() -1));
-  //t1.detach(); // as opposed to .join, which runs on the current thread
-  //t2.detach();
-  
-  test_peers.at(test_peers.size() -1)->start_server();
+  //test_peers.at(test_peers.size() -1)->start_server();
 
 }
 
-int main(int argc, char *argv[]) {
 
-  
+
+int main(int argc, char *argv[]) {
 
   struct sigaction sigIntHandler;
 
@@ -150,10 +150,6 @@ int main(int argc, char *argv[]) {
 
   unsigned int n = std::thread::hardware_concurrency();
   std::cout << n << " concurrent threads are supported.\n";
-  //thread t1(&LocalPeer::start_server, this);
-  //thread t2(&LocalPeer::check_for_msgs, this);
-  //t1.detach(); // as opposed to .join, which runs on the current thread
-  //t2.detach();
 
   try{
     int port1 = 8000;
@@ -167,7 +163,7 @@ int main(int argc, char *argv[]) {
       }
 
       if(strcmp(argv[1], "p2p") == 0 || strcmp(argv[1], "client") == 0){
-        printf("In peer-to-Peer mode\n");
+        printf("In peer-to-peer mode\n");
         init_test_peer("0.0.0.0", port2, "peer2", "127.0.0.1", port1, "Hello from peer2!\0");
       }
     } else {
@@ -188,11 +184,9 @@ int main(int argc, char *argv[]) {
 
   printf("Press CTRL-C to exit\n");
 
-  //test_peer1.stop_thread();
-  //test_peer2.stop_thread();
-  //sleep(1);
-  //test_peer1.join()
-  //test_peer2.join()
+  threads.emplace_back(thread(init_main_server_thread));
+
+
 
   pause();
 
