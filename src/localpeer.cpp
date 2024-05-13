@@ -1,8 +1,8 @@
-#include "include/localpeer.h"
-// #include "include/exceptionhandler.h"
-// #include "include/packet.h"
-// #include "include/sockethelper.h"
-// #include "include/peerconnhandler.h"
+#include "../include/localpeer.h"
+// #include "../include/exceptionhandler.h"
+// #include "../include/packet.h"
+// #include "../include/sockethelper.h"
+// #include "../include/peerconnhandler.h"
 // #include "localpeer.h"
 
 
@@ -71,15 +71,28 @@ void LocalPeer::add_pollfd_to_poll_list(int sockfd, short events){
 LocalPeer::~LocalPeer(){
   //this->server_sock_helper.reset();
   //delete this->server_sock_helper;
-  printf("~LocalPeer() %d\n", this->server_sock_helper.use_count());
+  //printf("~LocalPeer() %d\n", this->server_sock_helper.use_count());
 }
 
 
 void LocalPeer::handle_client(string ipaddr, int port, int client_sock){
   shared_ptr<PeerConnHandler> peer_conn = shared_ptr<PeerConnHandler>(new PeerConnHandler(ipaddr, port, client_sock));
-  this->add_pollfd_to_poll_list(client_sock, POLLIN | POLLERR | POLLHUP | POLLNVAL);
-  this->inbound_connections.push_back(peer_conn);
   
+  bool accept_connection = true;
+  //accept_connection = on_client_connection_request(ipaddr, port);
+  
+  if(this->inbound_connections.size() > this->max_inbound_connections){
+    printf("Not accepting new clients. Max connections reached\n");
+    accept_connection = false;
+  }
+
+  if(accept_connection){
+    this->add_pollfd_to_poll_list(client_sock, POLLIN | POLLERR | POLLHUP | POLLNVAL);
+    this->inbound_connections.push_back(peer_conn);
+  } else {
+    printf("server refusing client connection\n");
+    peer_conn->close();
+  }
 }
 
 
@@ -207,11 +220,7 @@ void LocalPeer::start_server(){
   vector<struct pollfd>::iterator poll_it;
 
   while(this->is_local_server_running){
-    // if(this->inbound_connections.size() >= this->max_inbound_connections){
-    //   printf("Not accepting new clients. Max connections reached, sleeping for 10s\n");
-    //   sleep(10);
-    //   continue;
-    // }
+    
     try {
       ready = poll(this->pollfd_list.data(),(unsigned long) this->pollfd_list.size(), poll_timeout);
 
@@ -225,6 +234,7 @@ void LocalPeer::start_server(){
         
         
         if((pfd.revents & POLLIN) == POLLIN){
+
           if(pfd.fd == this->server_sock_helper->get_sockfd()){
             string ipaddr;
             int port;
@@ -233,20 +243,22 @@ void LocalPeer::start_server(){
             //TODO: Inform the user that a client is trying to connect to us and ask them
             // if they want to accept the connection or not, for now just
             this->handle_client(ipaddr, port, client_sock);
+            poll_it = this->pollfd_list.begin();  // at this point since we modified our list, reset the iterator since it was probably invalidated when we modified the list
+            ++poll_it;
             continue;
-          }
-          shared_ptr<PeerConnHandler> peer =  get_peer_from_sockfd(pfd.fd);  //TODO: implement a map sockfd ->peer
+          } else {
+            shared_ptr<PeerConnHandler> peer =  get_peer_from_sockfd(pfd.fd);  //TODO: implement a map sockfd ->peer
           
-          if(peer != nullptr) {
-            peer->recv_data();
-            if(!(peer->conn_active())){
-              printf("not active\n");
-              (*poll_it).fd = -1;
-              //poll_it = this->pollfd_list.erase(poll_it);
+            if(peer != nullptr) {
+              peer->recv_data();
+              if(!(peer->conn_active())){
+                printf("not active\n");
+                (*poll_it).fd = -1;
+                //poll_it = this->pollfd_list.erase(poll_it);
+              }
             }
           }
           
-
         }
 
         //if((pfd.revents & POLLHUP ) == POLLHUP) prntf("some error");

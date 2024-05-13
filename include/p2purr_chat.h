@@ -1,5 +1,5 @@
-#ifndef P2P_CONN_H
-#define P2P_CONN_H
+#ifndef P2PURR_CHAT_H 
+#define P2PURR_CHAT_H 
 
 
 #include <iostream> 
@@ -23,8 +23,8 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <poll.h>
- 
-#include <unistd.h> // Read
+#include <unistd.h>
+
 // Library effective with Windows 
 //#include <windows.h>
 
@@ -40,7 +40,19 @@
 // using std::thread;
 
 
+#ifdef linux
+//linux only headers
+#endif
 
+#ifdef _WIN32  //_WIN32_WINNT
+//windows only headers
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+//in Windows, need to link with the ws2_32 Winsock library
+//Some compliers let us do this with the pragma below, if not we will need to link via command line argument
+#pragma comment(lib, "ws2_32.lib") //
+#endif
 
 
 using namespace std;
@@ -53,9 +65,14 @@ using namespace std;
 
 
 
+//void sig_handler(int s);
+//void init_signal_handler();
+void init_main_server();
 
+//expose this when we build our library, but not yet else the linker will throw an error
+//extern bool on_client_connection_request(string addr, uint16_t port);
 
-#endif
+#endif  //P2PURR_CHAT_H 
 
 
 

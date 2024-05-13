@@ -1,5 +1,5 @@
-#include "include/sockethelper.h"
-#include "include/exceptionhandler.h"
+#include "../include/sockethelper.h"
+#include "../include/exceptionhandler.h"
 
 
 SocketHelper::SocketHelper() {}
@@ -91,6 +91,7 @@ tuple<string, int, int> SocketHelper::server_accept_conns(){
 tuple<string, int> SocketHelper::handle_addr_fam_and_get_ip_port(sa_family_t sa_family, struct sockaddr *sa){
 
   char ipstr[INET6_ADDRSTRLEN];
+  memset(ipstr, '\0', INET6_ADDRSTRLEN);
   int port;
 
   if(sa_family == AF_INET){
@@ -109,7 +110,8 @@ tuple<string, int> SocketHelper::handle_addr_fam_and_get_ip_port(sa_family_t sa_
     printf("unhandled address family\n");
   }
 
-  if(ipstr == NULL){
+
+  if(ipstr[0] == '\0'){
       throw GenericException("'inet_ntop()' was not succesful\n");
   }
 
@@ -248,35 +250,36 @@ int SocketHelper::receive(uint8_t *buffer, int max_msg_len) {
 }
 
 //probably not going to use this often here just in case
-struct sockaddr* SocketHelper::build_sockaddr_struct(string host, uint16_t port, int sa_family){
-  struct sockaddr *sa;
+//TODO: this functions is probably buggy as it returns a dangling pointer
+// struct sockaddr* SocketHelper::build_sockaddr_struct(string host, uint16_t port, int sa_family){
+//   struct sockaddr *sa;
     
-  if (sa_family == AF_INET){
-    struct sockaddr_in sa_ipv4;
+//   if (sa_family == AF_INET){
+//     struct sockaddr_in sa_ipv4;
       
-    sa_ipv4.sin_family = AF_INET;
-    inet_pton(AF_INET, host.c_str(), &(sa_ipv4.sin_addr)); // populates sa_ipv4.sin_addr from a ip string
-    sa_ipv4.sin_port = htons(port);
-    memset(sa_ipv4.sin_zero, '\0', sizeof(sa_ipv4.sin_zero));
+//     sa_ipv4.sin_family = AF_INET;
+//     inet_pton(AF_INET, host.c_str(), &(sa_ipv4.sin_addr)); // populates sa_ipv4.sin_addr from a ip string
+//     sa_ipv4.sin_port = htons(port);
+//     memset(sa_ipv4.sin_zero, '\0', sizeof(sa_ipv4.sin_zero));
 
-    sa = (struct sockaddr*) &sa_ipv4;
+//     sa = (struct sockaddr*) &sa_ipv4;
 
-  } else if(sa_family == AF_INET6) {
-    struct sockaddr_in6 sa_ipv6;
-    sa_ipv6.sin6_family = AF_INET6;
-    inet_pton(AF_INET6, host.c_str(), &(sa_ipv6.sin6_addr)); // populates sa_ipv4.sin_addr from a ip string
-    sa_ipv6.sin6_port = htons(port);
-    //sa_ipv6.sin6_flowinfo = 0; // idk what this does TODO: figure it out
-    //sa_ipv6.sin6_scope_id = 0; // idk what this does TODO: figure it out
+//   } else if(sa_family == AF_INET6) {
+//     struct sockaddr_in6 sa_ipv6;
+//     sa_ipv6.sin6_family = AF_INET6;
+//     inet_pton(AF_INET6, host.c_str(), &(sa_ipv6.sin6_addr)); // populates sa_ipv4.sin_addr from a ip string
+//     sa_ipv6.sin6_port = htons(port);
+//     //sa_ipv6.sin6_flowinfo = 0; // idk what this does TODO: figure it out
+//     //sa_ipv6.sin6_scope_id = 0; // idk what this does TODO: figure it out
 
-    sa = (struct sockaddr*) &sa_ipv6;
+//     sa = (struct sockaddr*) &sa_ipv6;
 
-  } else {
-    printf("Addtress family not impemented yet");
-  }
+//   } else {
+//     printf("Addtress family not impemented yet");
+//   }
 
-  return sa;
-}
+//   return sa;
+// }
 
 struct addrinfo* SocketHelper::build_addrinfo_struct(string host, uint16_t port, int addr_family, int socktype, int flags){
   
@@ -314,8 +317,9 @@ void SocketHelper::get_all_ip_from_addrinfo(){
       struct sockaddr_in *ipv4 = (struct sockaddr_in*) p->ai_addr;
       addr = &(ipv4->sin_addr);
       char ipstr[INET_ADDRSTRLEN];
+      memset(ipstr, '\0', INET_ADDRSTRLEN);
       inet_ntop(p->ai_family, addr, ipstr, INET_ADDRSTRLEN);
-      if(ipstr == NULL) throw GenericException("'inet_ntop()' was not succesful\n");
+      if(ipstr[0] == '\0') throw GenericException("'inet_ntop()' was not succesful\n");
       this->ipv4_addrs.push_back(ipstr);
       //printf("  IPv4: %s\n", ipstr);
       
@@ -323,8 +327,9 @@ void SocketHelper::get_all_ip_from_addrinfo(){
       struct sockaddr_in6 *ipv6 = (struct sockaddr_in6*) p->ai_addr;
       addr = &(ipv6->sin6_addr);
       char ipstr[INET6_ADDRSTRLEN];
+      memset(ipstr, '\0', INET6_ADDRSTRLEN);
       inet_ntop(p->ai_family, addr, ipstr, INET6_ADDRSTRLEN);
-      if(ipstr == NULL) throw GenericException("'inet_ntop()' was not succesful\n");
+      if(ipstr[0] == '\0') throw GenericException("'inet_ntop()' was not succesful\n");
       this->ipv6_addrs.push_back(ipstr);
       //printf("  IPv6: %s\n", ipstr);
     }
@@ -338,7 +343,7 @@ void SocketHelper::get_all_ip_from_addrinfo(){
 
 void SocketHelper::set_sock_options(){
   int yes = 1;
-  int no = 0;
+  //int no = 0;
   int sockopt_retcode = 0;
   sockopt_retcode += setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
   sockopt_retcode += setsockopt(this->sock, SOL_SOCKET, SO_REUSEPORT, &yes, sizeof(yes));

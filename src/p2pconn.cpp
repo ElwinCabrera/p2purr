@@ -16,10 +16,10 @@ vector<thread> threads;
 
 void init_main_server_thread(){
 
+
   for(int i = 0; i < test_peers.size(); i++){
     test_peers.at(i)->start_server();
   }
-
   //test_peers.at(test_peers.size() -1)->start_server();
 }
 
@@ -104,14 +104,14 @@ void init_test_peer(string bind_addr, int bind_port, string local_peer_name="", 
     test_peers.at(test_peers.size() -1)->connect_to_peer(other_peer_addr, other_peer_port);
     sleep(1);
 
-    Packet pkt1 = to_pkt(data_to_send.c_str());
-    Packet pkt2 = to_pkt(data_to_send + " x2\0");
-    Packet pkt3 = to_pkt("1. Small data null terminated\0");
-    Packet pkt4 = to_pkt("2. Small data not null terminated");
-    Packet pkt5 = to_pkt("3. maybe this will continue here since previous data was not null terminated ?\0");
-    Packet pkt6 = to_pkt("4. Now I am just going to write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.\0");
-    Packet pkt7 = to_pkt("5. Sending the same data as before. Now I am just going to with a random null terminator HERE write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.\0");
-    Packet pkt8 = to_pkt("6. Sending something really long while a single recv call accepts fewer bytes than what I am sending now THE FOLLOWING IS A REPEAT OF THE LAST TRANSMISSION 'Sending the same data as before. Now I am just going to write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.'\0");
+    Packet pkt1 = to_pkt("1. " + data_to_send);
+    Packet pkt2 = to_pkt("2. " + data_to_send + " x2\0");
+    Packet pkt3 = to_pkt("3. Small data null terminated\0");
+    Packet pkt4 = to_pkt("4. Small data not null terminated");
+    Packet pkt5 = to_pkt("5. maybe this will continue here since previous data was not null terminated ?\0");
+    Packet pkt6 = to_pkt("6. Now I am just going to write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.\0");
+    Packet pkt7 = to_pkt("7. Sending the same data as before. Now I am just going to with a random null terminator HERE write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.\0");
+    Packet pkt8 = to_pkt("8. Sending something really long while a single recv call accepts fewer bytes than what I am sending now THE FOLLOWING IS A REPEAT OF THE LAST TRANSMISSION 'Sending the same data as before. Now I am just going to write a long message that is null terminated lalaalalalallalal this data could be anything the quick brown fox jummped over the fence or something like that.'\0");
 
     
 
@@ -120,7 +120,7 @@ void init_test_peer(string bind_addr, int bind_port, string local_peer_name="", 
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt2);
     sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt3);
-     sleep(2);
+    sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt4);
     //sleep(2);
     test_peers.at(test_peers.size() -1)->send_data_to_peer(other_peer_addr, pkt5);
@@ -186,7 +186,9 @@ int main(int argc, char *argv[]) {
 
   threads.emplace_back(thread(init_main_server_thread));
 
-
+  for(auto& t: threads){
+    t.join();
+  }
 
   pause();
 

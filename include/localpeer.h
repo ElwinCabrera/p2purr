@@ -2,7 +2,7 @@
 #define LOCAL_PEER_H
 
 
-#include "p2pconn.h"
+#include "p2purr_chat.h"
 
 #include "exceptionhandler.h"
 #include "packet.h"
@@ -35,8 +35,8 @@ protected:
     uint16_t port = -1;
     shared_ptr<SocketHelper> server_sock_helper;
     bool is_local_server_running = false;
-    int max_inbound_connections;
-    int max_outbound_connections;
+    size_t max_inbound_connections;
+    size_t max_outbound_connections;
     vector<shared_ptr<PeerConnHandler>> inbound_connections;  //we are the server to those connections, serve them!
     vector<shared_ptr<PeerConnHandler>> outbound_connections; // We are the client to those connections, ask them to serve us stuff
     vector<struct pollfd> pollfd_list;

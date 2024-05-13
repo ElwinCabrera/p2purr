@@ -1,8 +1,10 @@
 #ifndef PACKET_HPP
 #define PACKET_HPP
 
-#include "p2pconn.h"
+#include "p2purr_chat.h"
 #include "exceptionhandler.h"
+
+
 
 
   // For more info visit https://www.iana.org/assignments/media-types/media-types.xhtml
@@ -118,6 +120,8 @@ public:
   int get_pkt_size();
 };
 
+//expose this when we build our library, but not yet else the linker will throw an error
+//extern void on_packet_received(Packet pkt);
 
 
 #endif // PACKET_HPP

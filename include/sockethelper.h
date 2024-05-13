@@ -1,7 +1,7 @@
 #ifndef SOCKET_HELPER_HPP
 #define SOCKET_HELPER_HPP
 
-#include "p2pconn.h"
+#include "p2purr_chat.h"
 
 
 
@@ -21,7 +21,7 @@ public:
   char* receive_all();
   int receive(uint8_t *buffer, int len);
   //probably not going to use this often here just in case
-  struct sockaddr* build_sockaddr_struct(string host, uint16_t port, int sa_family);
+  //struct sockaddr* build_sockaddr_struct(string host, uint16_t port, int sa_family);
   struct addrinfo* build_addrinfo_struct(string host, uint16_t port, int addr_family, int socktype, int flags);
   void get_all_ip_from_addrinfo();
   void set_sock_options();

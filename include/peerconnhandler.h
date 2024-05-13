@@ -1,7 +1,7 @@
 #ifndef PEER_CONN_HANDLER_HPP
 #define PEER_CONN_HANDLER_HPP
 
-#include "p2pconn.h"
+#include "p2purr_chat.h"
 
 #include "exceptionhandler.h"
 #include "packet.h"

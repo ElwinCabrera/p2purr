@@ -1,7 +1,7 @@
 #ifndef EXCEPTION_HANDLER_H
 #define EXCEPTION_HANDLER_H
 
-#include "p2pconn.h"
+#include "p2purr_chat.h"
 
 
 class GenericException : public std::exception {

@@ -1,4 +1,4 @@
-#include "include/packet.h"
+#include "../include/packet.h"
 
 
 Packet::Packet(uint8_t *payload, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr, string attachment_file_path){
@@ -121,7 +121,7 @@ void Packet::rebuild_header(){
 
   uint8_t *hdr = this->header.get();
 
-  char start_symbol = *hdr++;
+  //char start_symbol = *hdr++;
   
   this->hdr_len = *hdr++;
   this->hdr_len = (this->hdr_len << 8) | *hdr++;
@@ -162,7 +162,7 @@ void Packet::rebuild_header(){
 void Packet::rebuild(){
   //if(this->buff_local_len < 2) throw PacketException("Received data is too small to process. can't even get header size\n");
   this->update_local_buff_info();
-  int remaining_buff_len = this->buff_total_len - *(this->curr_buff_idx);
+  //int remaining_buff_len = this->buff_total_len - *(this->curr_buff_idx);
   
   bool build_pending = true;
 

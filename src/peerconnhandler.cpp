@@ -1,7 +1,7 @@
-#include "include/peerconnhandler.h"
-#include "include/exceptionhandler.h"
-#include "include/packet.h"
-#include "include/sockethelper.h"
+#include "../include/peerconnhandler.h"
+#include "../include/exceptionhandler.h"
+#include "../include/packet.h"
+#include "../include/sockethelper.h"
 
 
 
@@ -56,7 +56,7 @@ void PeerConnHandler::connect(){
 }
 
 PeerConnHandler::~PeerConnHandler(){
-  printf("~PeerConnHandler()\n");
+  //printf("~PeerConnHandler()\n");
 }
 
 
@@ -72,7 +72,7 @@ void PeerConnHandler::send_data(Packet pkt){
 }
 
 void PeerConnHandler::recv_data(){
-  char *msg = nullptr;
+  
   try{
     //msg = this->sock_helper->receive_all();
     uint8_t *buf = this->recv_buffer.get();
@@ -87,6 +87,7 @@ void PeerConnHandler::recv_data(){
         this->current_pkt->rebuild();
         if(this->current_pkt->is_build_done()){
           this->completed_pkts.push_back(current_pkt);
+          //on_packet_received(current_pkt);
           current_pkt = nullptr;
         }
 
