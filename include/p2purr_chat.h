@@ -38,39 +38,59 @@
 // using std::endl;
 // using std::string;
 // using std::thread;
+using namespace std;
 
 
-#ifdef linux
-//linux only headers
-#endif
 
 #ifdef _WIN32  //_WIN32_WINNT
 //windows only headers
 #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <iphlpapi.h>
 //in Windows, need to link with the ws2_32 Winsock library
 //Some compliers let us do this with the pragma below, if not we will need to link via command line argument
 #pragma comment(lib, "ws2_32.lib") //
 #endif
 
 
-using namespace std;
 
-// #include "exceptionhandler.hpp"
-// #include "packet.hpp"
-// #include "sockethelper.hpp"
-// #include "peerconnhandler.hpp"
-// #include "localpeer.hpp"
+
+
+// #include "exceptionhandler.h"
+// #include "packet.h"
+// #include "sockethelper.h"
+// #include "peerconnhandler.h"
+#include "localpeer.h"
+
 
 
 
 //void sig_handler(int s);
 //void init_signal_handler();
-void init_main_server();
+//void init_main_server();
 
 //expose this when we build our library, but not yet else the linker will throw an error
 //extern bool on_client_connection_request(string addr, uint16_t port);
+
+
+class P2PurrHost{
+public:
+    P2PurrHost() {}
+    ~P2PurrHost();
+    void start();
+    void stop();
+protected:
+    void init_main_server();
+    void init_windows();
+    void deinit_windows();
+private:
+    unique_ptr<LocalPeer> local_server;
+    thread server_thread;
+    bool running = false;
+
+
+};
 
 #endif  //P2PURR_CHAT_H 
 

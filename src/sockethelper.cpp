@@ -4,16 +4,20 @@
 
 SocketHelper::SocketHelper() {}
 
-SocketHelper::SocketHelper(string host, uint16_t port, int sock): host(host), port(port), sock(sock){
+//template <typename T>
+SocketHelper::SocketHelper(string host, uint16_t port, sock_t sock): host(host), port(port), sock(sock){
   //TODO: check if host is a domain name or ip address
   //if this->host is a domain name convert it to an ip address got from getaddrinfo
   try {
-
-    if(sock == -1){
+    if(sock == -1 /*|| sock == INVALID_SOCKET*/){
       this->sock = socket(PF_INET, SOCK_STREAM, 0);
     }
+
+#ifdef _WIN32
+    if( this->sock == INVALID_SOCKET) throw SocketException("Failed to create socket\n");
+#else
     if( this->sock == -1) throw SocketException("Failed to create socket\n");
-    
+#endif
     printf("Socket created\n");
 
     this->ai = this->build_addrinfo_struct(host, port, AF_UNSPEC, SOCK_STREAM, 0);
@@ -37,9 +41,9 @@ SocketHelper::SocketHelper(string host, uint16_t port, int sock): host(host), po
 }
 
 SocketHelper::~SocketHelper(){
-  printf("~SocketHelper\n");
+  //printf("~SocketHelper\n");
   if(this->ai != NULL){
-    printf("~SocketHelper: freeaddrinfo\n");
+    //printf("~SocketHelper: freeaddrinfo\n");
     freeaddrinfo(this->ai); // free linked list
     this->ai = NULL;
   }
@@ -47,6 +51,8 @@ SocketHelper::~SocketHelper(){
   this->close_sock();
   
 }
+
+
 
 void SocketHelper::init_server(int backlog){
   try {
@@ -70,16 +76,19 @@ void SocketHelper::init_server(int backlog){
 }
 
 
-tuple<string, int, int> SocketHelper::server_accept_conns(){
+tuple<string, int, sock_t> SocketHelper::server_accept_conns(){
 
   struct sockaddr_storage their_addr;
   socklen_t addr_size = sizeof(their_addr);
   string ipstr;
   int port ;
 
-  int client_sock = accept(this->sock, (struct sockaddr*) &their_addr, &addr_size);
+  sock_t client_sock = accept(this->sock, (struct sockaddr*) &their_addr, &addr_size);
+#ifdef _WIN32
+  if (client_sock == INVALID_SOCKET) throw AcceptException();
+#else
   if (client_sock == -1) throw AcceptException();
-  
+#endif
   tie(ipstr, port) = handle_addr_fam_and_get_ip_port(their_addr.ss_family, (struct sockaddr*) &their_addr);
 
   printf("Got a new connection from %s:%d\n", ipstr.c_str(), port);
@@ -120,7 +129,11 @@ tuple<string, int> SocketHelper::handle_addr_fam_and_get_ip_port(sa_family_t sa_
 }
 
 void SocketHelper::connect_to_host(){
+#ifdef _WIN32
+  if(this->sock == INVALID_SOCKET) throw SocketException("Cannot connect to host, no valid socket");
+#else
   if(this->sock <= -1) throw SocketException("Cannot connect to host, no valid socket");
+#endif
 
   this->set_blocking(true);
   if(connect(this->sock, this->ai->ai_addr, this->ai->ai_addrlen) == -1) 
@@ -377,13 +390,18 @@ void SocketHelper::set_sock_options(){
 }
 
 void SocketHelper::set_blocking(bool blocking){
+  
 
+#ifdef _WIN32
+   unsigned long mode = blocking ? 0 : 1;
+   if(ioctlsocket(this->sock, FIONBIO, &mode) == 0) throw FCTRLException("Failed to set socket to blocking\n");
+#else
   int flags = fcntl(this->sock, F_GETFL, 0);
   if (flags == -1) throw FCTRLException();
   flags = blocking ? (flags & ~O_NONBLOCK) : (flags | O_NONBLOCK);
 
   if(fcntl(this->sock, F_SETFL, flags) == -1) throw FCTRLException("Failed to set socket to blocking\n");
-
+#endif
   //cout << "Socket blocking=" << blocking << endl;
 
 } 
@@ -399,15 +417,25 @@ bool SocketHelper::close_sock(){
   
 
   try{
-    
     int shtdn_ret = shutdown(this->sock, 2);
     if(shtdn_ret == -1 && errno != ENOTCONN) throw SocketShutdownException();
+    
+#ifdef _WIN32
+  int result = closesocket(this->sock);
+  if (result == SOCKET_ERROR) {
+    wprintf(L"closesocket failed with error = %d\n", WSAGetLastError() );
+  }    
+  
+  //this->winsock = INVALID_SOCKET;
+  this->sock = INVALID_SOCKET;
+#else
     
     int close_ret = close(this->sock);
     if(close_ret == -1) throw SocketCloseException();
     
 
     this->sock = -1;
+#endif
     this->is_sock_open = false;
     printf("Socket closed successfully\n");
 

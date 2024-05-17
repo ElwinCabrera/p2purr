@@ -7,7 +7,7 @@
 
 PeerConnHandler::PeerConnHandler() {}
 
-PeerConnHandler::PeerConnHandler(string host, uint16_t port, int sock): host(host), port(port){
+PeerConnHandler::PeerConnHandler(string host, uint16_t port, sock_t sock): host(host), port(port){
   
   //this->host = host
   //this->port= port

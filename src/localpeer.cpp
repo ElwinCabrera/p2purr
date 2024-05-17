@@ -196,11 +196,11 @@ void LocalPeer::remove_disconnected_peers(){
 void LocalPeer::close_all_connections(){
 
   try{
-    for(int i = 0; i < this->inbound_connections.size(); i++){
+    for(size_t i = 0; i < this->inbound_connections.size(); i++){
       this->inbound_connections.at(i)->close();
     }
 
-    for(int i = 0; i < this->outbound_connections.size(); i++){
+    for(size_t i = 0; i < this->outbound_connections.size(); i++){
       this->outbound_connections.at(i)->close();
     }
     this->inbound_connections.clear();
@@ -238,7 +238,7 @@ void LocalPeer::start_server(){
           if(pfd.fd == this->server_sock_helper->get_sockfd()){
             string ipaddr;
             int port;
-            int client_sock;
+            sock_t client_sock;
             tie(ipaddr, port, client_sock) = this->server_sock_helper->server_accept_conns();
             //TODO: Inform the user that a client is trying to connect to us and ask them
             // if they want to accept the connection or not, for now just

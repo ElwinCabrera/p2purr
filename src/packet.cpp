@@ -91,8 +91,7 @@ uint8_t* Packet::build(){
 
 void Packet::build_header(){
   //header len will be num header properties(5) + payload_len(4)
-  //uint payload_len_hton = hton(this->payload_len);
-  uint payload_len_hton = this->payload_len;
+  uint payload_len_hton = htonl(this->payload_len);
 
   this->hdr_len = 9;
   this->header = shared_ptr<uint8_t>((uint8_t*) malloc( this->hdr_len + 1));
@@ -145,7 +144,7 @@ void Packet::rebuild_header(){
     this->payload_len = (this->payload_len << 8) | *hdr++;
   }
 
-  //this->payload_len = ntoh(this->payload_len);
+  this->payload_len = ntohl(this->payload_len);
   if(this->payload_len <= 0) throw PacketException("Got a payload length of zero or less\n");
 
   if(this->payload.get() == nullptr){

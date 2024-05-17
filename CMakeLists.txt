@@ -101,7 +101,7 @@ endif()
 
 file(GLOB SOURCE_FILES "src/*.cpp")
 file(GLOB TEST_FILES "tests/*.cpp")
-#set(SOURCE_FILES src/localpeer.cpp  src/p2pconn.cpp  src/packet.cpp  src/peerconnhandler.cpp  src/sockethelper.cpp)
+set(SOURCE_FILES ${SOURCE_FILES} main.cpp)
 
 
  

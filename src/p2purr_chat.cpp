@@ -3,56 +3,28 @@
 #include "../include/packet.h"
 // #include "sockethelper.h"
 // #include "peerconnhandler.h"
-#include "../include/localpeer.h"
+//#include "../include/localpeer.h"
 
 
 
-//TODO: change NULL to nullptr
-
-unique_ptr<LocalPeer> local_server;
-thread server_thread;
-
-
-void sig_handler(int s){
-  printf("\nCaught signal(%d) SIGINT. Exiting gracefully\n", s);
-  local_server->stop_server();
-  server_thread.join();
-  exit(1); 
-
-}
-
-void init_signal_handler(){
-  struct sigaction sigIntHandler;
-
-  sigIntHandler.sa_handler = sig_handler;
-  sigemptyset(&sigIntHandler.sa_mask);
-  sigIntHandler.sa_flags = 0;
-
-  sigaction(SIGINT, &sigIntHandler, NULL);
+void P2PurrHost::init_main_server(){
+  this->local_server = unique_ptr<LocalPeer>(new LocalPeer("0.0.0.0", 10011));
+  this->local_server->start_server();
 }
 
 
-void init_main_server(){
-  local_server = unique_ptr<LocalPeer>(new LocalPeer("0.0.0.0", 10011));
-  local_server->start_server();
-}
-
-
-int main(int argc, char *argv[]) {
-
-  
-
-  // unsigned int n = std::thread::hardware_concurrency();
+void P2PurrHost::start(){
+   // unsigned int n = std::thread::hardware_concurrency();
   // std::cout << n << " concurrent threads are supported.\n";
 
   try{
-   
-    server_thread = thread(init_main_server);
+#ifdef _WIN32
+  this->init_windows();
+#endif
+    
+    this->server_thread = thread(&P2PurrHost::init_main_server, this);
     sleep(1);
-
-
-    printf("Press CTRL-C to exit\n");
-
+    this->running = true;
     server_thread.join();
 
   } catch(GenericException &e){
@@ -67,10 +39,42 @@ int main(int argc, char *argv[]) {
     exit(EXIT_FAILURE);
   }
 
- 
-
-  pause();
-
-
-  return 0;
 }
+
+
+void P2PurrHost::stop(){
+  printf("Stopping Server\n");
+  this->local_server->stop_server();
+  this->server_thread.join();
+  this->running = false;
+#ifdef _WIN32
+  this->deinit_windows();
+#endif
+}
+
+
+
+P2PurrHost::~P2PurrHost(){
+  if(this->running) this->stop();
+}
+
+
+
+#ifdef _WIN32
+void P2PurrHost::init_windows(){
+  WSADATA wsaData;
+  // Initialize Winsock
+  int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+  if (iResult != 0) {
+    printf("WSAStartup failed: %d\n", iResult);
+    return 1;
+  }
+
+}
+
+void P2PurrHost::deinit_windows(){
+  WSACleanup();
+}
+
+#endif
+
