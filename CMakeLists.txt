@@ -30,7 +30,7 @@ FetchContent_MakeAvailable(Catch2)
 find_package(Catch2)
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
-#include(CTest)
+include(CTest)
 include(Catch)
 
 
@@ -100,16 +100,16 @@ endif()
 
 
 file(GLOB SOURCE_FILES "src/*.cpp")
-file(GLOB TEST_FILES "tests/*.cpp")
+file(GLOB TEST_FILES "tests/*.cpp" "src/*.cpp")
 set(SOURCE_FILES ${SOURCE_FILES} main.cpp)
 
-
+set(TEST_NAME ${PROJECT_NAME}_tests)
  
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-add_executable(tests ${TEST_FILES})
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
+add_executable(${TEST_NAME} ${TEST_FILES})
+target_link_libraries(${TEST_NAME} PRIVATE Catch2::Catch2WithMain)
 
-    
+catch_discover_tests(${TEST_NAME})
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
