@@ -2,19 +2,10 @@
 #define SOCKET_HELPER_HPP
 
 #include <iostream> 
-#include <stdlib.h>
-#include <stdio.h> 
-#include <cstdlib> // for exit() and EXIT_FAILURE
-#include <sys/types.h>
-#include <memory>  // for std::unique_ptr<T> var_name(new T)
-#include <thread>
-#include <algorithm>
-#include <cstring>
-#include <signal.h>
-
-#include <math.h>
-//#include<cmath>
-#include <limits>
+//#include <stdlib.h>
+//#include <stdio.h> 
+//#include <sys/types.h>
+//#include <cstring>
 
 #include <arpa/inet.h>  
 #include <sys/socket.h> // for socket functions
@@ -24,30 +15,41 @@
 #include <poll.h>
 #include <unistd.h>
 
-// Library effective with Windows 
-//#include <windows.h>
 
-#include <exception>
-#include <cerrno>
+#ifdef _WIN32  //_WIN32_WINNT
+//windows only headers
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <iphlpapi.h>
+//in Windows, need to link with the ws2_32 Winsock library
+//Some compliers let us do this with the pragma below, if not we will need to link via command line argument
+#pragma comment(lib, "ws2_32.lib") //
+#endif
 
 #include <vector>
 #include <string>
 #include <tuple>
-// using std::cout;
-// using std::endl;
-// using std::string;
-// using std::thread;
-using namespace std;
+
+using std::cout;
+using std::endl;
+using std::string;
+using std::vector;
+using std::tuple;
+using std::min;
+using std::to_string;
+
 
 
 #include "global_config.h"
+#include "exceptionhandler.h"
 
 //template <typename T>
 class SocketHelper {
 
 public:
   SocketHelper();
-  SocketHelper(string host, uint16_t port, sock_t sock= -1);
+  SocketHelper(string host, uint16_t port, sock_t sock = -1);
   ~SocketHelper();
   void init_server(int backlog);
   tuple<string, int, sock_t> server_accept_conns();

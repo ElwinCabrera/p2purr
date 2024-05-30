@@ -1,48 +1,18 @@
 #ifndef PACKET_HPP
 #define PACKET_HPP
 
-#include <iostream> 
-#include <stdlib.h>
-#include <stdio.h> 
-#include <cstdlib> // for exit() and EXIT_FAILURE
-#include <sys/types.h>
-#include <memory>  // for std::unique_ptr<T> var_name(new T)
-#include <thread>
-#include <algorithm>
-#include <cstring>
-#include <signal.h>
+#include <iostream>
+#include <memory>
+#include <cstdint>
+#include <string.h> //#include <cstring>
 
-#include <math.h>
-//#include<cmath>
-#include <limits>
-
-#include <arpa/inet.h>  
-#include <sys/socket.h> // for socket functions
-#include <netinet/in.h> // for sockaddr_in 
-#include <netdb.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <unistd.h>
-
-// Library effective with Windows 
-//#include <windows.h>
-
-#include <exception>
-#include <cerrno>
-
-#include <vector>
-#include <string>
-#include <tuple>
-// using std::cout;
-// using std::endl;
-// using std::string;
-// using std::thread;
-using namespace std;
-
+using std::string;
+using std::shared_ptr;
 
 
 #include "exceptionhandler.h"
 #include "global_config.h"
+#include "serializer.h"
 
 
 
@@ -113,8 +83,10 @@ private:
   shared_ptr<uint8_t> built_pkt;
   shared_ptr<uint8_t> header;
   shared_ptr<uint8_t> payload;
+  uint8_t tmp_hdr[3];
   
   int pkt_len;
+  uint16_t full_hdr_len;
   uint16_t hdr_len;
   uint payload_len;
   
@@ -136,14 +108,20 @@ private:
 
   bool keepalive;
 
+  void make_pkt();
+
 public:
-  Packet(uint8_t *payload, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr, string attachment_file_path = "");
+  
+  Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr, string attachment_file_path = "");
   Packet(shared_ptr<uint8_t> buffer, shared_ptr<int> curr_buff_idx, int buff_total_len);
-  Packet(void *buffer);
+  //Packet(void *buffer);
+  Packet(const Packet &other); //copy constructor
+  //Packet(Packet &&other); //move constructor
   //Packet() {}
   ~Packet();
   uint8_t* build();
   void build_header();
+  bool header_ready();
   void rebuild_header();
   void rebuild();
 
@@ -154,9 +132,13 @@ public:
   void set_build_pending(bool is_pending);
   void update_buff_idx();
   void update_local_buff_info();
+  uint8_t* get_header() { return this->header.get(); }
   uint8_t* get_payload();
   uint8_t* get_packet();
-  int get_pkt_size();
+  int get_header_len(){ return this->hdr_len; }
+  int get_full_header_len(){ return this->full_hdr_len; }
+  int get_payload_len() { return this->payload_len; }
+  int get_pkt_len();
 };
 
 //expose this when we build our library, but not yet else the linker will throw an error

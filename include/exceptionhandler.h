@@ -5,42 +5,17 @@
 
 
 #include <iostream> 
-#include <stdlib.h>
-#include <stdio.h> 
-#include <cstdlib> // for exit() and EXIT_FAILURE
-#include <sys/types.h>
-#include <memory>  // for std::unique_ptr<T> var_name(new T)
-#include <thread>
-#include <algorithm>
-#include <cstring>
-#include <signal.h>
-
-#include <math.h>
-//#include<cmath>
-#include <limits>
-
-#include <arpa/inet.h>  
-#include <sys/socket.h> // for socket functions
-#include <netinet/in.h> // for sockaddr_in 
 #include <netdb.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <unistd.h>
-
-// Library effective with Windows 
-//#include <windows.h>
-
+#include <stdio.h>
 #include <exception>
+#include <string.h>
 #include <cerrno>
 
-#include <vector>
-#include <string>
-#include <tuple>
-// using std::cout;
-// using std::endl;
-// using std::string;
-// using std::thread;
-using namespace std;
+
+using std::cout;
+using std::endl;
+using std::string;
+
 
 
 
@@ -55,7 +30,7 @@ public:
     
     virtual const char* what () {
         std::cout << "Exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -71,7 +46,7 @@ public:
     
     const char* what () {
         std::cout << "'socket(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -85,7 +60,7 @@ public:
     
     const char* what () {
         std::cout << "'setsockopt(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -100,7 +75,7 @@ public:
     
     const char* what () {
         std::cout << "'bind(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -115,7 +90,7 @@ public:
     
     const char* what () {
         std::cout << "'listen(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -132,7 +107,7 @@ public:
             return "";
         }
         std::cout << "'accept(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -147,7 +122,7 @@ public:
     
     const char* what () {
         std::cout << "'connect(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -163,7 +138,7 @@ public:
     
     const char* what () {
         std::cout << "'send(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -185,7 +160,7 @@ public:
             return "";
         }
         std::cout << "'recv(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -203,7 +178,7 @@ public:
         std::cout << "'getaddrinfo(..)' exception occured" << std::endl;
         std::cout << "addrinfo return code: " << ai_ret_code << " -> " << gai_strerror(ai_ret_code) << std::endl;
         //fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(ai_ret_code));
-        //std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        //std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -218,7 +193,7 @@ public:
     
     const char* what () {
         std::cout << "'close(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -233,7 +208,7 @@ public:
     
     const char* what () {
         std::cout << "'shutdown(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -248,7 +223,7 @@ public:
     
     const char* what () {
         std::cout << "'fctrl(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };
@@ -263,7 +238,7 @@ public:
     
     const char* what () {
         std::cout << "'poll(..)' exception occured" << std::endl;
-        std::cout << "Last errno saved: " << errno << " -> " << std::strerror(errno) << std::endl;
+        std::cout << "Last errno saved: " << errno << " -> " << strerror(errno) << std::endl;
         return message;
     }
 };

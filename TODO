@@ -1,0 +1,9 @@
+windows port
+test socket, and server
+update build system
+utf-8 encoding for strings
+sanitizing data
+    no trailing white space
+add file attachment support
+compression  (already created a library for this just need to import it)
+code cleanup

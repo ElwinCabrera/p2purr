@@ -1,12 +1,16 @@
-#include<stdlib.h>
-#include "include/p2purr_chat.h"
+#include  <stdlib.h>
+#include <signal.h>
+#include "include/p2purr_server.h"
 
 
-P2PurrHost host;
+#define SERVER_ADDRESS "0.0.0.0"
+#define SERVER_PORT 10011
+
+P2PurrServer server(SERVER_ADDRESS, SERVER_PORT);
 
 void sig_handler(int s){
   printf("\nCaught signal(%d) SIGINT. Exiting gracefully\n", s);
-  host.stop();
+  server.stop();
   exit(1); 
 
 }
@@ -30,7 +34,7 @@ int main(int argc, char *argv[]) {
   
 
   init_signal_handler();
-  host.start();
+  server.start();
   
 
   

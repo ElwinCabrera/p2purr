@@ -1,7 +1,5 @@
 #include "../include/peerconnhandler.h"
-#include "../include/exceptionhandler.h"
-#include "../include/packet.h"
-#include "../include/sockethelper.h"
+
 
 
 
@@ -11,14 +9,13 @@ PeerConnHandler::PeerConnHandler(string host, uint16_t port, sock_t sock): host(
   
   //this->host = host
   //this->port= port
-  
-
-  if(sock == -1){
-    this->set_server();
-  } else {
-    this->set_client();
-  }
-
+#ifdef _WIN32
+  if(sock == INVALID_SOCKET) this->set_server();
+  else this->set_client();
+#else
+  if(sock == -1) this->set_server();
+  else this->set_client();
+#endif
 
   this->sock_helper = shared_ptr<SocketHelper>(new SocketHelper(host, port, sock));
   //this->sock_helper = unique_ptr<SocketHelper>(new SocketHelper(host, port, sock));
@@ -62,7 +59,7 @@ PeerConnHandler::~PeerConnHandler(){
 
 void PeerConnHandler::send_data(Packet pkt){
   try{
-    this->sock_helper->send_data2(pkt.get_packet(), pkt.get_pkt_size()); // or pkt.build()
+    this->sock_helper->send_data2(pkt.get_packet(), pkt.get_pkt_len()); // or pkt.build()
     
   } catch(GenericException &e){
     cout << e.what();
@@ -114,7 +111,7 @@ void PeerConnHandler::recv_data(){
   
   if(!this->completed_pkts.empty()){
     Packet *pkt = this->completed_pkts.at(this->completed_pkts.size()-1);
-    printf("Latest packet received %d(+header) bytes from %s:%d -> '%s'\n", pkt->get_pkt_size(), this->host.c_str(), this->port, (char*) pkt->get_payload());
+    printf("Latest packet received %d(+header) bytes from %s:%d -> '%s'\n", pkt->get_pkt_len(), this->host.c_str(), this->port, (char*) pkt->get_payload());
   }
   
 

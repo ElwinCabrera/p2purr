@@ -1,44 +1,28 @@
 #ifndef SERIALIZER_H
 #define SERIALIZER_H
 
-#include <math.h>
 #include <iostream> 
-#include <stdlib.h>
 #include <stdio.h> 
-#include <cstdlib> // for exit() and EXIT_FAILURE
-#include <sys/types.h>
-#include <memory>  // for std::unique_ptr<T> var_name(new T)
-#include <thread>
+#include <cstdint>
 #include <algorithm>
-#include <cstring>
-#include <signal.h>
-
 #include <math.h>
 //#include<cmath>
 #include <limits>
 
-#include <arpa/inet.h>  
-#include <sys/socket.h> // for socket functions
-#include <netinet/in.h> // for sockaddr_in 
-#include <netdb.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <unistd.h>
+//#include <stdlib.h>
+//#include <cstdlib> // for exit() and EXIT_FAILURE
+//#include <sys/types.h>
+//#include <cstring>
 
-// Library effective with Windows 
-//#include <windows.h>
 
-#include <exception>
-#include <cerrno>
 
-#include <vector>
-#include <string>
-#include <tuple>
-// using std::cout;
-// using std::endl;
-// using std::string;
-// using std::thread;
-using namespace std;
+
+
+
+using std::cout;
+using std::endl;
+using std::string;
+
 
 
 #include "global_config.h"
@@ -47,15 +31,21 @@ using namespace std;
 class Serializer {
 
 private:
-  struct precision_info{
+
+    struct precision_info{
     int num_sign_bits = 1;
     int num_exponent_bits;
     int num_significand_bits;
     int exponent_bias;
     int total_num_bits;
-  } ;
+    };
+
+    uint8_t *buffer;
+    size_t size;
+    size_t capacity;
 
 public:
+
   enum Precision{
     HALF_PRECISION = 16,
     SINGLE_PRECISION = 32,
@@ -63,6 +53,7 @@ public:
     x86_EXTENDED_PRECISION = 80,
     QUAD = 128
   };
+
 
 
 
@@ -99,6 +90,23 @@ public:
   long double deserialize_float(uint64_t num, Precision p);
 
   struct precision_info get_precision_info(Precision p);
+
+  // static uint16_t serialize_int16(int64_t num);
+  // static uint32_t serialize_int32(int64_t num);
+  // static uint64_t serialize_int64(int64_t num);
+  
+  // static int16_t deserialize_int16(int16_t num);
+  // static int32_t deserialize_int32(int32_t num);
+  // static int64_t deserialize_int64(int64_t num);
+
+
+  static void serialize_int16(uint8_t *buff, int64_t num);
+  static void serialize_int32(uint8_t *buff, int64_t num);
+  static void serialize_int64(uint8_t *buff, int64_t num);
+
+  static int16_t deserialize_int16(uint8_t *buff);
+  static int32_t deserialize_int32(uint8_t *buff);
+  static int64_t deserialize_int64(uint8_t *buff);
 
   void test();
 

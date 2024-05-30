@@ -1,5 +1,5 @@
 #include "../include/sockethelper.h"
-#include "../include/exceptionhandler.h"
+
 
 
 SocketHelper::SocketHelper() {}
@@ -9,15 +9,16 @@ SocketHelper::SocketHelper(string host, uint16_t port, sock_t sock): host(host),
   //TODO: check if host is a domain name or ip address
   //if this->host is a domain name convert it to an ip address got from getaddrinfo
   try {
-    if(sock == -1 /*|| sock == INVALID_SOCKET*/){
-      this->sock = socket(PF_INET, SOCK_STREAM, 0);
-    }
-
+    bool sock_created = true;
 #ifdef _WIN32
-    if( this->sock == INVALID_SOCKET) throw SocketException("Failed to create socket\n");
+    if(sock == INVALID_SOCKET) this->sock = socket(PF_INET, SOCK_STREAM, 0);
+    if( this->sock == INVALID_SOCKET) sock_created = false;
 #else
-    if( this->sock == -1) throw SocketException("Failed to create socket\n");
+    if(sock == -1) this->sock = socket(PF_INET, SOCK_STREAM, 0);
+    if( this->sock == -1) sock_created = false;
 #endif
+
+    if(!sock_created) throw SocketException("Failed to create socket\n");
     printf("Socket created\n");
 
     this->ai = this->build_addrinfo_struct(host, port, AF_UNSPEC, SOCK_STREAM, 0);

@@ -26,9 +26,14 @@ uint64_t Serializer::serialize_float(long double frac_num, Serializer::Precision
 
     return (sign << p_info.total_num_bits) | (biased_exponent << p_info.num_significand_bits) | significand;
 
-  }
+}
 
-  long double Serializer::deserialize_float(uint64_t num, Serializer::Precision p){
+
+
+
+
+
+long double Serializer::deserialize_float(uint64_t num, Serializer::Precision p){
 
     struct precision_info p_info = get_precision_info(p);
     long long sign, exponent, biased_exponent, significand;
@@ -50,11 +55,11 @@ uint64_t Serializer::serialize_float(long double frac_num, Serializer::Precision
 
     return original_num;
 
-  }
+}
 
 
 
-  struct Serializer::precision_info Serializer::get_precision_info(Serializer::Precision p){
+struct Serializer::precision_info Serializer::get_precision_info(Serializer::Precision p){
     precision_info pi;
 
     pi.num_sign_bits = 1;
@@ -91,62 +96,61 @@ uint64_t Serializer::serialize_float(long double frac_num, Serializer::Precision
 
     }
     return pi;
-  }
-
-void test() {
-
-  //  U u;
-    
-  //   u.f = 10.0;
-    
-  //   printf("%g = %#x\n", u.f, u.i);
-
-  //   double num = 3.14545304958;
-  //   double num_frac = num - (int) num;
-  //   int num_whole = (int) (num - num_frac); 
-  //   printf("Number = %g, Integer = %g, Fraction = %d\n", num, num_frac, num_whole);
-
-  float f = 1738.145;
-  //long double f = 3.1415928;
-  long long sign = (f < 0) ? 1 : 0;
-  long long exponent = ilogb(f);
-  long double f_norm = scalbn(f, -1*exponent);
-  //normalize f without direct bit manipulation
-  long double mantissa = f_norm - 1;
-
-  long double f_whole_part;
-  long double f_frac_part = modf(f, &f_whole_part);
-
-  cout << "Given the number " << f << "\n";
-  cout << "sign: " << sign <<"\n";
-  cout << "exponent: " << exponent <<"\n";
-  cout << "normalized: " << f_norm << "\n";
-  cout << "mantissa: " << mantissa << "\n"; 
-  cout << "modf() =  " << f_whole_part << " + " << f_frac_part << '\n';
-  cout << "logb()/ilogb() make " << f_norm << " * " << std::numeric_limits<double>::radix << "^" << exponent << '\n';
-
-  
-
-  cout << "\n";
-  long double original_f = ldexp(f_norm, exponent);
-
-  f_whole_part;
-  f_frac_part = modf(original_f, &f_whole_part);
-
-  cout << "ldexp() (original unpacked) = " << original_f << "\n";
-  cout << "modf(unpacked) =  " << f_whole_part << " + " << f_frac_part << '\n';
+}
 
 
-  long long biased_exponent = exponent + 127;
-  long long significand = static_cast<long long>(scalbn(f_norm - 1, 23)) ;
-  
-  long long res = (sign << 32) | (biased_exponent << 23) | significand;
+
+ void Serializer::serialize_int16(uint8_t *buff, int64_t num) {
+    //int header_data_len = htons(this->full_hdr_len - 3); 
+    *buff++ = (num >> 8) & 0xFF;
+    *buff++ = num & 0xFF; 
+
+    //or least significant byte first little endian
+    // *buff++ = num & 0xFF; 
+    // *buff++ = (num >> 8) & 0xFF;
+
+ }
+
+void Serializer::serialize_int32(uint8_t *buff, int64_t num){
+    int byte_idx = 3;
+    while(byte_idx >= 0){
+        *buff++  = (num >> (8 * byte_idx--)) & 0xFF;
+    }
+}
+
+void Serializer::serialize_int64(uint8_t *buff, int64_t num){
+    int byte_idx = 7;
+    while(byte_idx >= 0){
+        *buff++  = (num >> (8 * byte_idx--)) & 0xFF;
+    }
+}
 
 
-  
-  printf("Significand in long long %016X\n", significand);
+int16_t Serializer::deserialize_int16(uint8_t *buff) {
+    int16_t result = 0;
+    result = *buff++;
+    result = (result << 8) | *buff++;
+    //result = ntohs(result); //+3;
+    return result;
+}
 
-  printf("Final serialized representation: %016X\n", res);
-  
+int32_t Serializer::deserialize_int32(uint8_t *buff) {
+    int32_t result = 0;
+    int bytes = 4;
+    int i = 0;
+    while(i++ < bytes){
+        result = (result << 8) | *buff++;
+    }
+    return result;
+}
+
+int64_t Serializer::deserialize_int64(uint8_t *buff){
+    int64_t result = 0;
+    int bytes = 8;
+    int i = 0;
+    while(i++ < bytes){
+        result = (result << 8) | *buff++;
+    }
+    return result;
 
 }
