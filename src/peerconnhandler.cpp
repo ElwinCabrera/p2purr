@@ -57,18 +57,16 @@ PeerConnHandler::~PeerConnHandler(){
 }
 
 
-void PeerConnHandler::send_data(Packet pkt){
+void PeerConnHandler::send_pkt(Packet pkt){
   try{
-    this->sock_helper->send_data2(pkt.get_packet(), pkt.get_pkt_len()); // or pkt.build()
+    this->sock_helper->send_data(pkt.get_packet(), pkt.get_pkt_len());
     
   } catch(GenericException &e){
     cout << e.what();
   }
-  
-
 }
 
-void PeerConnHandler::recv_data(){
+shared_ptr<Packet> PeerConnHandler::recv_pkt(){
   
   try{
     //msg = this->sock_helper->receive_all();
@@ -79,11 +77,11 @@ void PeerConnHandler::recv_data(){
     if(recv_len > 0 && *pos < recv_len){
       while(*pos < recv_len){
         if(this->current_pkt == nullptr){
-          this->current_pkt = new Packet(this->recv_buffer, this->curr_buff_idx, this->buff_size);
+          this->current_pkt = shared_ptr<Packet>(new Packet(this->recv_buffer, this->curr_buff_idx, this->buff_size));
         }
         this->current_pkt->rebuild();
         if(this->current_pkt->is_build_done()){
-          this->completed_pkts.push_back(current_pkt);
+          this->completed_pkts.push_back(current_pkt); //store all packets in an array until i figure out what to do with them
           //on_packet_received(current_pkt);
           current_pkt = nullptr;
         }
@@ -91,31 +89,18 @@ void PeerConnHandler::recv_data(){
       }
         if(*pos >= recv_len ) this->clear_buff();
     }
-    
+
+    if(!this->completed_pkts.empty()){
+      shared_ptr<Packet> pkt = this->completed_pkts.at(this->completed_pkts.size()-1);
+      return pkt;
+      //printf("Latest packet received %d(+header) bytes from %s:%d -> '%s'\n", pkt->get_pkt_len(), this->host.c_str(), this->port, (char*) pkt->get_payload());
+    }
    
-
-  
-  //first read the first two bytes which tells us how long our header is going to be
-  
-  //read and process the header (it should tell us how long is the next string of bytes)
-  //process the following bytes after the header according to what the header specifies.
-  //check if size of data - header >= buffer size 
-  //if yes then process data in buffer buffer and remove it after we are done
-
-  //TODO: 
-  //make sure to limit buffer size, so that it wont get out of hand
   } catch (GenericException &e){
     cout << e.what();
   }
 
-  
-  if(!this->completed_pkts.empty()){
-    Packet *pkt = this->completed_pkts.at(this->completed_pkts.size()-1);
-    printf("Latest packet received %d(+header) bytes from %s:%d -> '%s'\n", pkt->get_pkt_len(), this->host.c_str(), this->port, (char*) pkt->get_payload());
-  }
-  
-
-
+  return nullptr;
 }
 
 

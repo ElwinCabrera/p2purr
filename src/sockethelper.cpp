@@ -69,6 +69,8 @@ void SocketHelper::init_server(int backlog){
     
     printf(" listening on %s:%d\n",this->host.c_str(),this->port);
 
+    this->is_sock_init = true;
+
   } catch (GenericException &e) {
     std::cout << e.what();
     exit(EXIT_FAILURE);
@@ -142,25 +144,13 @@ void SocketHelper::connect_to_host(){
 
   this->set_blocking(false);
 
+  this->is_sock_init = true;
+
   //printf("Connected to host %s:%d\n",this->host.c_str(),this->port);
 }
   
-bool SocketHelper::send_data(string msg){  //doesnt have to be a string can be anything sine send(...) accepts a 'void*'
-  
-  int msg_len = msg.size(); // or strlen(msg)
-  int total_bytes_sent =0;
-  printf("Sending %d bytes of data to %s:%d ... ", msg_len, this->host.c_str(), this->port);
-  while(total_bytes_sent < msg_len){
-    string msg_substr = msg.substr(total_bytes_sent);
-    int num_bytes_sent = send(this->sock, msg_substr.c_str(), msg_substr.size(), 0);
-    if(num_bytes_sent == -1) throw SendException();
-    total_bytes_sent += num_bytes_sent;
-  }
-  printf("%d bytes sent succesfully\n", total_bytes_sent);
-  return total_bytes_sent == msg_len;
-}
 
-bool SocketHelper::send_data2(const uint8_t *data, int data_len){
+bool SocketHelper::send_data(const uint8_t *data, int data_len){
   int bytes_sent_so_far = 0;
   int bytes_left_to_send = data_len;
   printf("Sending %d bytes of data to %s:%d ... ", data_len, this->host.c_str(), this->port);
@@ -175,66 +165,9 @@ bool SocketHelper::send_data2(const uint8_t *data, int data_len){
 }
 
 
-char* SocketHelper::receive_all(){
-  string msg;
-  int total_bytes_recvd = 0;
-  int bytes_recvd = -2;
-  
-  //could cause a buffer overflow if user tries to send us something EXTREAMLY long in one 'send(...)'
-  //then this loop will loop and loop and our 'msg' buffer can grow out of control 
-  //to the point of potentially crashing our program or even the system on which it runs on
-  while(1){
-    char chunk[this->max_recv_bytes_at_once];
-    memset(chunk, '\0', sizeof(chunk));
-    bytes_recvd = recv(this->sock, chunk, this->max_recv_bytes_at_once, 0);
-    if(bytes_recvd <= 0) break;
-    msg += chunk;
-    total_bytes_recvd += bytes_recvd;
-    if(bytes_recvd <= this->max_recv_bytes_at_once) break; 
-  }
-   if(bytes_recvd == 0){
-    //lets close the connection and move on
-    printf("Peer closed the connection\n");  
-    this->close_sock();
-  } else if (bytes_recvd == -1){
-    throw ReceiveException("Something is wrong with recv");
-  }
-  
-  //could cause a slow down since object is destroyed and copied again
-  return msg.data();
-
-}
-
-
-string SocketHelper::receive_fixed_len(int msg_len){
-  vector<string> chunks;
-  int total_bytes_recvd = 0;
-  //printf("Polling recv(%d bytes) from %s:%d\n", msg_len, this->host.c_str(), this->port);
-  while(total_bytes_recvd < msg_len){
-    int recv_len = min(msg_len - total_bytes_recvd, 4096);
-    char chunk[recv_len];
-    int bytes_recvd = recv(this->sock, chunk, recv_len, MSG_WAITALL);
-    //if(bytes_recvd > 0 && bytes_recvd <= recv_len && msg_len > recv_len) msg_len = bytes_recvd; // avoid infinite loop where msg_len > total_bytes
-    if(bytes_recvd == 0){
-      
-      printf("Peer closed the connection\n");
-      this->close_sock();
-    }
-    if (bytes_recvd == -1) throw ReceiveException("Something is wrong with recv\n");
-
-    chunks.push_back(chunk);
-    total_bytes_recvd += bytes_recvd;
-  }
-  string msg_recvd = "";
-  for(string s: chunks) msg_recvd += s;
-  msg_recvd += '\0';
-  printf("Received '%s' from %s:%d\n", msg_recvd.c_str(), this->host.c_str(), this->port);
-  return msg_recvd;
-}
-
 
 int SocketHelper::receive(uint8_t *buffer, int max_msg_len) {
-
+  if(!(this->is_sock_open)) return 0;
   
   int total_bytes_recvd = 0;
   //printf("Polling recv(%d bytes) from %s:%d\n", max_msg_len, this->host.c_str(), this->port);
@@ -418,8 +351,12 @@ bool SocketHelper::close_sock(){
   
 
   try{
-    int shtdn_ret = shutdown(this->sock, 2);
-    if(shtdn_ret == -1 && errno != ENOTCONN) throw SocketShutdownException();
+    if(this->is_sock_init){ // because we cant shutdown a socket that is not connecterd or listening
+      int shtdn_ret = shutdown(this->sock, SHUT_WR);
+      if(shtdn_ret == -1 /*&& errno != ENOTCONN*/) throw SocketShutdownException();
+      this->is_sock_init = false;
+    }
+    
     
 #ifdef _WIN32
   int result = closesocket(this->sock);

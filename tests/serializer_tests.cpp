@@ -1,5 +1,4 @@
 #include "test_globals.h"
-#include "test_helpers.h"
 #include "../include/serializer.h"
 
 #include <vector>
@@ -44,7 +43,7 @@ bool test_serializer_int32(){
 
 bool test_serializer_int64(){
     
-    std::vector<uint> test_cases;
+    std::vector<uint64_t> test_cases;
     test_cases.push_back(0);
     test_cases.push_back(0xFF00000000000000);
     test_cases.push_back(0x00FF000000000000);
@@ -61,10 +60,10 @@ bool test_serializer_int64(){
     test_cases.push_back(0xFF0000FFFF0000FF);
     test_cases.push_back(0xFFFFFFFFFFFFFFFF);
 
-    for(uint expected: test_cases){
-        uint8_t buff[sizeof(uint)];
-        Serializer::serialize_int32(buff, expected);
-        uint res = (uint) Serializer::deserialize_int32(buff);
+    for(uint64_t expected: test_cases){
+        uint8_t buff[sizeof(uint64_t)];
+        Serializer::serialize_int64(buff, expected);
+        uint64_t res = (uint64_t) Serializer::deserialize_int64(buff);
         if(res != expected) return false; 
         ++expected;   
     }

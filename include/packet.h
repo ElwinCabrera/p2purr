@@ -115,7 +115,7 @@ public:
   Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr, string attachment_file_path = "");
   Packet(shared_ptr<uint8_t> buffer, shared_ptr<int> curr_buff_idx, int buff_total_len);
   //Packet(void *buffer);
-  Packet(const Packet &other); //copy constructor
+  //Packet(const Packet &other); //copy constructor
   //Packet(Packet &&other); //move constructor
   //Packet() {}
   ~Packet();
@@ -140,9 +140,6 @@ public:
   int get_payload_len() { return this->payload_len; }
   int get_pkt_len();
 };
-
-//expose this when we build our library, but not yet else the linker will throw an error
-//extern void on_packet_received(Packet pkt);
 
 
 #endif // PACKET_HPP

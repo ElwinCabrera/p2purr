@@ -35,8 +35,8 @@ public:
   PeerConnHandler(string host, uint16_t port, sock_t sock = -1);
   ~PeerConnHandler();
   void connect(); //only called if we are the client and they are the server
-  void send_data(Packet pkt);
-  void recv_data();
+  void send_pkt(Packet pkt);
+  shared_ptr<Packet> recv_pkt();
   void clear_buff();
   bool close();
 
@@ -51,6 +51,7 @@ public:
   void set_mute_flags(bool mute_send=true, bool mute_recv=true);
 
   string get_host() ;
+  uint16_t get_port() {return this->port;}
 
   shared_ptr<SocketHelper> get_sock_helper();
 
@@ -66,8 +67,8 @@ private:
   shared_ptr<int> curr_buff_idx;
   int buff_size;
   //vector<uint8_t> recv_buffer;
-  vector<Packet*> completed_pkts;
-  Packet *current_pkt;
+  vector<shared_ptr<Packet>> completed_pkts;
+  shared_ptr<Packet> current_pkt;
   int payload_size;
 
   bool keepalive = true;

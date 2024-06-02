@@ -1,46 +1,46 @@
 #include "../include/packet.h"
 
 
-Packet::Packet(const Packet &other){
+// Packet::Packet(const Packet &other){
   
 
-  this->type = other.type;
-  this->charset = other.charset;
-  this->encoding = other.encoding;
-  this->encryption = other.encryption; 
-  this->compression = other.compression;
+//   this->type = other.type;
+//   this->charset = other.charset;
+//   this->encoding = other.encoding;
+//   this->encryption = other.encryption; 
+//   this->compression = other.compression;
 
-  this->attachment_file_path = other.attachment_file_path; 
-  this->has_file_attachment = other.has_file_attachment;
+//   this->attachment_file_path = other.attachment_file_path; 
+//   this->has_file_attachment = other.has_file_attachment;
 
   
   
   
   
-  this->built_pkt = other.built_pkt;
-  this->header = other.header;
-  this->payload = other.payload;
+//   this->built_pkt = other.built_pkt;
+//   this->header = other.header;
+//   this->payload = other.payload;
   
-  this->pkt_len = other.pkt_len;
-  this->hdr_len = other.hdr_len;
-  this->full_hdr_len = other.full_hdr_len;
-  this->payload_len = other.payload_len;
+//   this->pkt_len = other.pkt_len;
+//   this->hdr_len = other.hdr_len;
+//   this->full_hdr_len = other.full_hdr_len;
+//   this->payload_len = other.payload_len;
   
 
-  this->buffer = other.buffer;
-  this->curr_buff_idx = other.curr_buff_idx;
-  this->buff_total_len = other.buff_total_len;
-  this->buff_local_len = other.buff_local_len;
-  this->buff_pos_start = other.buff_pos_start;
-  //char *buff_start;
-  this->buff_next = other.buff_next;
-  //int buff_pos_end;
-  this->num_bytes_read = other.num_bytes_read;
+//   this->buffer = other.buffer;
+//   this->curr_buff_idx = other.curr_buff_idx;
+//   this->buff_total_len = other.buff_total_len;
+//   this->buff_local_len = other.buff_local_len;
+//   this->buff_pos_start = other.buff_pos_start;
+//   //char *buff_start;
+//   this->buff_next = other.buff_next;
+//   //int buff_pos_end;
+//   this->num_bytes_read = other.num_bytes_read;
 
-  this->pkt_built = other.pkt_built;
-  this->pkt_rebuilding = other.pkt_rebuilding;
+//   this->pkt_built = other.pkt_built;
+//   this->pkt_rebuilding = other.pkt_rebuilding;
 
-}
+// }
 
 
 Packet::Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr, string attachment_file_path){
@@ -69,6 +69,8 @@ Packet::Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet c
     this->has_file_attachment = true;
   }
   this->keepalive = true;
+
+  this->build();
 }
 
 
@@ -112,7 +114,7 @@ uint8_t* Packet::build(){
   
   this->build_header();
 
-  this->pkt_len = sizeof(char) + sizeof(uint16_t) + this->full_hdr_len + this->payload_len;
+  this->pkt_len = this->full_hdr_len + this->payload_len;
   
   this->make_pkt();
 
@@ -293,11 +295,23 @@ void Packet::rebuild(){
 
 void Packet::make_pkt(){
 
-  this->built_pkt = shared_ptr<uint8_t> ((uint8_t*) malloc(this->pkt_len));
+  this->built_pkt = shared_ptr<uint8_t> ((uint8_t*) malloc(this->pkt_len + 1));
+  this->built_pkt.get()[this->pkt_len] = '\0';
   uint8_t *pkt = this->built_pkt.get();
   memcpy(pkt, this->header.get(), this->full_hdr_len );
   pkt += this->full_hdr_len;
   memcpy(pkt, this->payload.get(), this->payload_len);
+
+  if(this->buffer){
+    //this->buffer.release();
+    //this->buff_next = nullptr;
+    //this->buffer = nullptr;
+  }
+  if(this->curr_buff_idx){
+    //this->curr_buff_idx.release();
+    //this->curr_buff_idx = nullptr;
+  }
+
 
 }
 

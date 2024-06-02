@@ -1,5 +1,4 @@
 #include "test_globals.h"
-#include "test_helpers.h"
 #include "../include/packet.h"
 #include "../include/serializer.h"
 
@@ -15,15 +14,18 @@ using std::to_string;
 using std::min;
 
 
-bool verify_header_integrity(Packet pkt, uint8_t *expected_hdr_data, int len){
-    uint8_t *pkt_data = pkt.get_packet();
-    uint8_t *header_data = pkt.get_header();
+//TODO: implement the one in PeerConnHandler::recv_data()
+
+
+bool verify_header_integrity(Packet *pkt, uint8_t *expected_hdr_data, int len){
+    uint8_t *pkt_data = pkt->get_packet();
+    uint8_t *header_data = pkt->get_header();
     
     //if(pkt_data == nullptr && expected_hdr_data != nullptr) return false;
     if(header_data == nullptr && expected_hdr_data != nullptr) return false;
     if(header_data == nullptr || expected_hdr_data == nullptr) return false;
 
-    int hdr_len = pkt.get_full_header_len();
+    int hdr_len = pkt->get_full_header_len();
     if(hdr_len != len) return false;
     
 
@@ -42,14 +44,14 @@ bool verify_header_integrity(Packet pkt, uint8_t *expected_hdr_data, int len){
     return true;
 }
 
-bool verify_payload_integrity(Packet pkt, uint8_t *expected_payload_data, int len){
-    uint8_t *pkt_data = pkt.get_packet();
-    uint8_t *payload_data = pkt.get_payload();
+bool verify_payload_integrity(Packet *pkt, uint8_t *expected_payload_data, int len){
+    uint8_t *pkt_data = pkt->get_packet();
+    uint8_t *payload_data = pkt->get_payload();
     
     if(pkt_data == nullptr && expected_payload_data != nullptr) return false;
     if(pkt_data == nullptr || expected_payload_data == nullptr) return false;
 
-    int payload_len = pkt.get_payload_len();
+    int payload_len = pkt->get_payload_len();
     if(payload_len != len) return false;
 
     int idx = 0;
@@ -60,8 +62,8 @@ bool verify_payload_integrity(Packet pkt, uint8_t *expected_payload_data, int le
 
 
     idx = 0;
-    int pkt_idx = pkt.get_full_header_len();
-    int pkt_end = pkt.get_pkt_len();
+    int pkt_idx = pkt->get_full_header_len();
+    int pkt_end = pkt->get_pkt_len();
     while(pkt_idx < pkt_end){
         if(pkt_data[pkt_idx] != expected_payload_data[idx]) return false;
         ++idx;
@@ -124,7 +126,6 @@ bool test_packet_data_integrity(){
     string test_str_payload = get_all_ascii_chars();
 
     Packet pkt((uint8_t*) test_str_payload.data(), test_str_payload.size(), PacketType::text_plain, PacketCharSet::utf8, PacketEncoding::elwin_enc, PacketCompression::_7zip, PacketEncryption::LAST);
-    pkt.build();
      
     vector<uint8_t> expected_hdr;
     expected_hdr.push_back(0xFF);
@@ -142,9 +143,9 @@ bool test_packet_data_integrity(){
         expected_hdr.push_back((payload_len >> (8 * byte_idx--)) & 0xFF);
     }
         
-    success = success && verify_header_integrity(pkt, (uint8_t*) expected_hdr.data(), expected_hdr.size());
+    success = success && verify_header_integrity(&pkt, (uint8_t*) expected_hdr.data(), expected_hdr.size());
     
-    success = success && verify_payload_integrity(pkt, (uint8_t*) test_str_payload.data(), test_str_payload.size());
+    success = success && verify_payload_integrity(&pkt, (uint8_t*) test_str_payload.data(), test_str_payload.size());
 
     return success;
     
@@ -161,10 +162,9 @@ bool test_packet_circular_buffer(){
         test_str_payload += get_all_ascii_chars();
     }
     Packet orig_pkt_recvd((uint8_t*) test_str_payload.data(), test_str_payload.size(), PacketType::text_plain, PacketCharSet::utf8, PacketEncoding::elwin_enc, PacketCompression::_7zip, PacketEncryption::LAST);
-    orig_pkt_recvd.build();
 
-    //verify_header_integrity(orig_pkt_recvd,  (uint8_t*)  orig_pkt_recvd.get_header(), orig_pkt_recvd.get_full_header_len());
-    success = success && verify_payload_integrity(orig_pkt_recvd, (uint8_t*) test_str_payload.data(), test_str_payload.size());
+    //verify_header_integrity(&orig_pkt_recvd,  (uint8_t*)  orig_pkt_recvd.get_header(), orig_pkt_recvd.get_full_header_len());
+    success = success && verify_payload_integrity(&orig_pkt_recvd, (uint8_t*) test_str_payload.data(), test_str_payload.size());
     
     int buff_max_size = len_limit * 2;
     int curr_buff_size = 3;
@@ -173,8 +173,8 @@ bool test_packet_circular_buffer(){
 
         Packet rebuilt_pkt = rebuild_pkt_from_pkt(orig_pkt_recvd, curr_buff_size);
             
-        success = success && verify_header_integrity(rebuilt_pkt,  (uint8_t*)  orig_pkt_recvd.get_header(), orig_pkt_recvd.get_full_header_len());
-        success = success && verify_payload_integrity(rebuilt_pkt, (uint8_t*) orig_pkt_recvd.get_payload(), orig_pkt_recvd.get_payload_len());
+        success = success && verify_header_integrity(&rebuilt_pkt,  (uint8_t*)  orig_pkt_recvd.get_header(), orig_pkt_recvd.get_full_header_len());
+        success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt_recvd.get_payload(), orig_pkt_recvd.get_payload_len());
 
         ++curr_buff_size;
     }

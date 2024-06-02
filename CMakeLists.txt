@@ -117,7 +117,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -g -Wall -Wextra -Wpedantic)
-target_compile_options(${TEST_NAME} PRIVATE -g -Wall -Wextra -Wpedantic)
+target_compile_options(${TEST_NAME} PRIVATE -g -Wall -Wextra -Wpedantic -D_TEST)
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}" )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)

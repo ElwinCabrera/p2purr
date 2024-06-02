@@ -57,7 +57,13 @@ using std::thread;
 
 
 //expose this when we build our library, but not yet else the linker will throw an error
+
+#if defined(_TEST) || defined(_LIB)
 //extern bool on_client_connection_request(string addr, uint16_t port);
+//extern bool on_data_received(string host, uint16_t port, uint8_t *payload);
+extern bool on_packet_received(string host, uint16_t port, shared_ptr<Packet> pkt);
+//extern bool on_packet_received(Packet *pkt);
+#endif
 
 
 class P2PurrServer{
@@ -67,8 +73,7 @@ public:
   P2PurrServer(string host, uint16_t port);
   ~P2PurrServer();
   void connect_to_peer(string host, uint16_t port);
-  void send_data_to_peer(string host, Packet pkt);
-  void check_for_msgs();
+  void send_pkt_to_peer(Packet pkt, string host, uint16_t port);
   void handle_new_client();
   void handle_client_communications(sock_t fd);
   void add_fd_to_watch_list(sock_t sockfd, short events);

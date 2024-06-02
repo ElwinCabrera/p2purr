@@ -30,13 +30,12 @@ void sig_handler(int s){
 int main(int argc, char *argv[]) {
 
   
-  printf("Press CTRL-C to exit\n");
   
 
   init_signal_handler();
   server.start();
-  
 
+  printf("Press CTRL-C to exit\n");
   
   pause();
   return 0;

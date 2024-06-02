@@ -10,8 +10,8 @@ P2PurrServer::P2PurrServer(string host, uint16_t port): host(host), port(port){
   this->server_sock_helper = shared_ptr<SocketHelper>(new SocketHelper(host, port)); // or just make_shared<SocketHelper>(host, port);
   //this->server_sock_helper = make_shared<SocketHelper>(host, port);
   this->is_local_server_running = false;
-  this->max_inbound_connections = 1;
-  this->max_outbound_connections = 1;
+  this->max_inbound_connections = 1000;
+  this->max_outbound_connections = 1000;
   //this->backlog = 2;
   //this->timeout = 10.0;
   this->server_sock_helper->set_blocking(false);
@@ -41,7 +41,17 @@ void P2PurrServer::add_fd_to_watch_list(sock_t sockfd, short events){
 void P2PurrServer::handle_client_communications(sock_t fd){
   
   if(this->sock_to_peer_map.find(fd) != this->sock_to_peer_map.end()){
-    sock_to_peer_map[fd]->recv_data();
+    //Packet *pkt = sock_to_peer_map[fd]->recv_pkt();
+    shared_ptr<PeerConnHandler> peer = sock_to_peer_map[fd];
+    shared_ptr<Packet> pkt = peer->recv_pkt();
+
+#if defined(_TEST) || defined(_LIB)
+    if(pkt.get()){
+      //implement a semaphore/lock
+      on_packet_received(peer->get_host(), peer->get_port(), pkt);
+      //on_data_received(peer->get_host(), peer->get_port(), payload);
+    }
+#endif
   } /*else { // so this socket exists already. TODO: Handle this
       
   }*/
@@ -113,12 +123,12 @@ void P2PurrServer::connect_to_peer(string host, uint16_t port){
 }
 
 
-void P2PurrServer::send_data_to_peer(string host, Packet pkt){
+void P2PurrServer::send_pkt_to_peer(Packet pkt, string host, uint16_t port){
   try {
     bool peer_found = false;
     for(auto& [fd, peer] : this->sock_to_peer_map){
-      if(peer->get_host() == host){
-        peer->send_data(pkt);
+      if(peer->get_host() == host && peer->get_port() == port){
+        peer->send_pkt(pkt);
         peer_found = true;
         break;
       }
@@ -136,19 +146,19 @@ void P2PurrServer::send_data_to_peer(string host, Packet pkt){
 }
 
 void P2PurrServer::remove_disconnected_peers(){
-  //vector<shared_ptr<PeerConnHandler>>::iterator it = this->inbound_connections.begin();
+  if(!this->is_local_server_running) return;
   unordered_map<sock_t, shared_ptr<PeerConnHandler>>::iterator it = this->sock_to_peer_map.begin();
   
   vector<sock_t> fds_to_rm;
 
   
-  while(it != this->sock_to_peer_map.end()){
+  while(it != this->sock_to_peer_map.end() && !this->sock_to_peer_map.empty()){
     shared_ptr<PeerConnHandler> peer = it->second;
     //shared_ptr<PeerConnHandler> = it->second.get(); // ???
     if(!peer->conn_active()){
-      printf("Removed client %s from peer list\n", peer->get_host().c_str());
       fds_to_rm.push_back(it->first);
       it = this->sock_to_peer_map.erase(it);
+      printf("Removed client %s from peer list\n", peer->get_host().c_str());
     } else {
       ++it;
     }
@@ -172,7 +182,7 @@ void P2PurrServer::remove_disconnected_peers(){
   vector<struct pollfd>::iterator poll_it = this->pollfd_list.begin();
   for(sock_t fd : fds_to_rm) {
     while(poll_it != this->pollfd_list.end()){
-      if((*poll_it).fd == (int) fd || (*poll_it).fd == -1){
+      if((*poll_it).fd == (int) fd || (*poll_it).fd == -1){ 
         cout << "Removing sockfd " << fd << " from fd poll list\n";
         poll_it = this->pollfd_list.erase(poll_it);
       } else {
@@ -188,12 +198,22 @@ void P2PurrServer::remove_disconnected_peers(){
 void P2PurrServer::close_all_connections(){
 
   try{
-    for(auto& [fd, peer] : this->sock_to_peer_map){
-      peer->close();
-    }
+// #ifdef linux
+//     for(int i = 1; i < this->pollfd_list.size(); ++i){
+//       this->pollfd_list.at(i).fd = -1;
+//     }
+// #endif
+      for(auto& [fd, peer] : this->sock_to_peer_map){
+        /*if(peer != nullptr)*/ peer->close();
+      }
+    
     this->sock_to_peer_map.clear();
+    this->pollfd_list.clear();
   } catch(GenericException &e) {
     cout << e.what();
+  } catch(std::exception& e){
+    cout << e.what() << endl;
+    printf("system error\n");
   }
 }
 
@@ -215,7 +235,7 @@ void P2PurrServer::start_async_poll(){
     //ready is >0 do stuff ...
     //if(this->follfd_list.at(0).fd & POLLIN) printf("");
     poll_it = this->pollfd_list.begin();
-    while(poll_it != this->pollfd_list.end()){
+    while(poll_it != this->pollfd_list.end() && this->is_local_server_running){
       struct pollfd pfd = *poll_it;
         
         
@@ -245,7 +265,6 @@ void P2PurrServer::start_async_poll(){
     sleep(0.1);
 
   }
-  this->close_all_connections();
 
 #endif
 }
@@ -312,14 +331,20 @@ void P2PurrServer::start(){
 
 bool P2PurrServer::stop(){
   printf("Stopping server at %s:%d\n", this->host.c_str(), this->port);
+  
+  this->is_local_server_running = false;  
+
   this->close_all_connections();
 
+  
   if(this->server_sock_helper->close_sock()){
-    this->is_local_server_running = false;
+    if(this->server_thread.joinable()){
+      this->server_thread.join();
+    }
+    
     return true;
   }
-
-  this->server_thread.join();
+  this->is_local_server_running = true; 
   
 #ifdef _WIN32
   this->deinit_windows();
