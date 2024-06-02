@@ -157,7 +157,7 @@ bool test_packet_circular_buffer(){
     bool success = true;
 
     string test_str_payload = "";
-    int len_limit = 3000;
+    size_t len_limit = 3000;
     while(test_str_payload.size() <= len_limit){
         test_str_payload += get_all_ascii_chars();
     }
@@ -189,7 +189,17 @@ bool test_packet_circular_buffer(){
 
 bool packet_test_all(){
 
-    return test_packet_data_integrity() && test_packet_circular_buffer();
+    if(!test_packet_data_integrity()){
+        printf("packet data integrity\n");
+        return false;
+    }
+
+    if(!test_packet_circular_buffer()){
+        printf("Packet circular buffer failed\n");
+        return false;
+    }
+
+    return  true;
 
 
 }

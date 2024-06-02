@@ -11,25 +11,6 @@ project(p2purr_chat
         DESCRIPTION ""
         LANGUAGES CXX)
 
-# FetchContent_Declare(
-#   googletest
-#   GIT_REPOSITORY https://github.com/google/googletest.git
-#   GIT_TAG        703bd9caab50b139428cea1aaff9974ebee5742e # release-1.10.0
-#   FIND_PACKAGE_ARGS NAMES GTest
-# )
-# FetchContent_Declare(
-#   Catch2
-#   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-#   #GIT_TAG        605a34765aa5d5ecbf476b4598a862ada971b0cc # v3.0.1 
-#   GIT_TAG        4e8d92bf02f7d1c8006a0e7a5ecabd8e62d98502 # v3.6.0
-#   FIND_PACKAGE_ARGS
-# )
-
-# This will try calling find_package() first for both dependencies
-#FetchContent_MakeAvailable(Catch2)
-#find_package(Catch2)
-
-#list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 #include(CTest)
 #include(Catch)
 
@@ -100,16 +81,14 @@ endif()
 
 
 file(GLOB SOURCE_FILES "src/*.cpp")
-file(GLOB TEST_FILES "tests/*.cpp" "src/*.cpp")
 set(SOURCE_FILES ${SOURCE_FILES} main.cpp)
+file(GLOB TEST_FILES "tests/*.cpp" "src/*.cpp")
 
 set(TEST_NAME ${PROJECT_NAME}_tests)
  
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 add_executable(${TEST_NAME} ${TEST_FILES})
-#target_link_libraries(${TEST_NAME} PRIVATE Catch2::Catch2WithMain)
 
-#catch_discover_tests(${TEST_NAME})
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -118,14 +97,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_compile_options(${PROJECT_NAME} PRIVATE -g -Wall -Wextra -Wpedantic)
 target_compile_options(${TEST_NAME} PRIVATE -g -Wall -Wextra -Wpedantic -D_TEST)
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}" )
+#target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}" )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-
-
-
-
-
-

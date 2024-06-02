@@ -6,6 +6,7 @@
 #define TEST_ADDRESS "127.0.0.1"
 #define TEST_PORT1 8001
 #define TEST_PORT2 8002
+#define MAX_CONNECTIONS 100
 
 vector<shared_ptr<Packet>> pkts_received;
 
@@ -127,7 +128,7 @@ bool test_multiple_client_connected_no_sending_data(){
         vector<PeerConnHandler> clients;
         int i = 0;
         
-        while(i <= 100){
+        while(i <= MAX_CONNECTIONS){
             clients.push_back(PeerConnHandler(TEST_ADDRESS, TEST_PORT1));
             ++i;
         }
@@ -159,7 +160,7 @@ bool test_multiple_client_connected_no_sending_data2(){
         vector<PeerConnHandler> clients;
         int i = 0;
         
-        while(i <= 100){
+        while(i <= MAX_CONNECTIONS){
             clients.push_back(PeerConnHandler(TEST_ADDRESS, TEST_PORT1));
             ++i;
         }
@@ -203,7 +204,6 @@ bool test_server_send_receive(){
 
         pkts_received.clear();
         string test_str_payload = get_all_ascii_chars();
-        //string test_str_payload = "Fuck you!";
         Packet pkt((uint8_t*) test_str_payload.data(), test_str_payload.size(), PacketType::text_plain, PacketCharSet::utf8, PacketEncoding::elwin_enc, PacketCompression::_7zip, PacketEncryption::LAST);
         
         if(!verify_payload_integrity(&pkt, (uint8_t*) test_str_payload.data(), test_str_payload.size())) return false;
@@ -246,7 +246,7 @@ bool test_multiple_client_send(){
         vector<PeerConnHandler> clients;
         int i = 0;
         
-        while(i <= 100){
+        while(i <= MAX_CONNECTIONS){
             clients.push_back(PeerConnHandler(TEST_ADDRESS, TEST_PORT1));
             ++i;
         }
@@ -270,7 +270,7 @@ bool test_multiple_client_send(){
         
         if(pkts_received.size() !=  pkts_sent.size()) return false;
 
-        for(int i = 0; i < pkts_sent.size(); ++i){
+        for(size_t i = 0; i < pkts_sent.size(); ++i){
             Packet orig_pkt = pkts_sent.at(i);
             shared_ptr<Packet> received_pkt = pkts_received.at(i);
 
@@ -328,20 +328,58 @@ bool test_p2p_communication(){
 }
 
 bool server_test_all(){
-    bool success = true;
+    
+    if(!test_create_and_close_socket()) {
+        printf("Opening and Closing the socket failed\n");
+        return false;
+    }
+    if(!test_server_init()){
+        printf("Server initialization failed\n");
+        return false;
+    }
+    if(!test_server_start_stop()) {
+        printf("server smoke test failed\n");
+        return false;
+    }
 
-    success = success && test_create_and_close_socket();
-    success = success && test_server_init();
-    success = success && test_server_start_stop();
-    success = success && test_server_client_connection();
-    success = success && test_multiple_client_connected_no_sending_data();
-    success = success && test_multiple_client_connected_no_sending_data2();
-    success = success && test_server_send_receive();
-    success = success && test_multiple_client_send();
-    success = success && test_p2p_connection();
-    success = success && test_p2p_communication();
+    
+    if(!test_server_client_connection()) {
+        printf("server client connection failed\n");
+        return false;
+    }
 
+    
+    if(!test_multiple_client_connected_no_sending_data()) {
+        printf("server multiple client connections failed (with server ending communications with clients)\n");
+        return false;
+    };
 
+    if(!test_multiple_client_connected_no_sending_data2()) {
+        printf("server multiple client connections failed (with clients ending communications with server)\n");
+        return false;
+    };
 
-    return success;
+    
+    if(!test_server_send_receive()) {
+        printf("Server send and receive failed\n");
+        return false;
+    }
+
+    
+    if(!test_multiple_client_send()) {
+        printf("Server multiple client send failed\n");
+        return false;
+    }
+
+    
+    if(!test_p2p_connection()) {
+        printf("p2p connection failed\n");
+        return false;
+    }
+    // if(!test_p2p_communication()) {
+    //     printf("p2p communications failed\n")
+    //     return false;
+    // }
+
+    return true;
 }

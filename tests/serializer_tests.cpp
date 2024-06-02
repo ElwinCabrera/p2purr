@@ -136,6 +136,21 @@ bool test_serializer_float() {
 
 bool serializer_test_all(){
 
-    return test_serializer_int16() && test_serializer_int32() && test_serializer_int64();
+    if(!test_serializer_int16()){
+        printf("Serialize int16 failed\n");
+        return false;
+    }
+
+    if(!test_serializer_int32()){
+        printf("Serialize int32 failed\n");
+        return false;
+    }
+
+    if(!test_serializer_int64()){
+        printf("Serialize int64 failed\n");
+        return false;
+    }
+
+    return true;
 
 }

@@ -1,8 +1,6 @@
 #ifndef TEST_GLOBALS_H
 #define TEST_GLOBALS_H
 
-#define _TEST
-
 #include <cstdint>
 #include <stdio.h>
 

@@ -75,6 +75,7 @@ Packet::Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet c
 
 
 Packet::Packet(shared_ptr<uint8_t> buffer, shared_ptr<int> curr_buff_idx, int buff_total_len){
+  
   this->buffer = buffer;
   //this->rebuilding_in_progress = false;
   this->curr_buff_idx = curr_buff_idx;
@@ -98,12 +99,14 @@ Packet::Packet(shared_ptr<uint8_t> buffer, shared_ptr<int> curr_buff_idx, int bu
   this->payload_len = 0;
   this->num_bytes_read = 0;
   //this->keepalive = true;
-  this->set_build_pending(false);
+  //this->set_build_pending(false);
 
 }
 
 Packet::~Packet(){
-
+    this->buff_next = nullptr;
+    this->buffer = nullptr;
+    this->curr_buff_idx = nullptr;
 }
 
 uint8_t* Packet::build(){
@@ -216,7 +219,7 @@ void Packet::rebuild_header(){
 
   uint8_t *hdr = this->header.get();
 
-  uint8_t start_symbol = *hdr++;
+  /*uint8_t start_symbol = */hdr++;
 
   this->hdr_len = Serializer::deserialize_int16(hdr);
   hdr += sizeof(uint16_t);
@@ -301,18 +304,6 @@ void Packet::make_pkt(){
   memcpy(pkt, this->header.get(), this->full_hdr_len );
   pkt += this->full_hdr_len;
   memcpy(pkt, this->payload.get(), this->payload_len);
-
-  if(this->buffer){
-    //this->buffer.release();
-    //this->buff_next = nullptr;
-    //this->buffer = nullptr;
-  }
-  if(this->curr_buff_idx){
-    //this->curr_buff_idx.release();
-    //this->curr_buff_idx = nullptr;
-  }
-
-
 }
 
 
@@ -348,7 +339,22 @@ void Packet::set_build_done(bool is_build_done) {
 }
 void Packet::set_build_pending(bool is_pending) { 
   this->pkt_rebuilding = is_pending; 
-  this->pkt_built = !is_pending; 
+  this->pkt_built = !is_pending;
+
+  if(!this->pkt_rebuilding){
+    if(this->buffer){
+      this->buffer.reset();
+      this->buff_next = nullptr;
+      this->buffer = nullptr;
+    }
+    if(this->curr_buff_idx){
+      this->curr_buff_idx.reset();
+      this->curr_buff_idx = nullptr;
+    }
+    this->buff_total_len = -1;
+    this->buff_local_len = -1;
+    this->buff_pos_start = -1;
+  }
 }
 
 uint8_t* Packet::get_payload() {  

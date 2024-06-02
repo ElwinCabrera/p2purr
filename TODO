@@ -7,4 +7,10 @@ add file attachment support
 compression  (already created a library for this just need to import it)
 fix warnings
 memory leak test
+    valgring is reporting:
+        "possibly lost: 304 bytes in 1 blocks"
+        "still reachable: 32 bytes in 1 blocks"
+    this is only happening when i start the server
+    other than this no other leaks are present.
+
 code cleanup

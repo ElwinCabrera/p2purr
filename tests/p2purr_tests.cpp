@@ -21,23 +21,30 @@ void sig_handler(int s){
 
 int main(int argc, char *argv[]) {
 
+    bool success = true;
+
     try{
         init_signal_handler();
-        if(serializer_test_all()){
+
+
+        success = success && serializer_test_all();
+
+        if(success){
             printf("Serializer tests pass\n");
         } else {
             printf("Serializer tests fail\n");
             exit(EXIT_FAILURE);
         }
-    
-        if(packet_test_all()){
+        success = success && packet_test_all();
+        if(success){
             printf("Packet tests pass\n");
         } else {
             printf("Packet tests fail\n");
             exit(EXIT_FAILURE);
         }
 
-        if(server_test_all()){
+        success = success && server_test_all();
+        if(success){
             printf("Server tests pass\n");
         } else {
             printf("Server tests fail\n");
@@ -48,16 +55,20 @@ int main(int argc, char *argv[]) {
         //Other errors
         std::cout << "System error occured errno: " << errno << " -> " << strerror(errno) << std::endl;
         std::cout << e.what() << std::endl;
-        printf("One or more test failed\n");
+        printf("Tests failed\n");
         exit(EXIT_FAILURE);
     } catch (...) {
         printf("An error occured but, dont know why. You are on your own");
-        printf("One or more test failed\n");
+        printf("Tests failed\n");
         exit(EXIT_FAILURE);
     }
 
    
-
-    printf("All tests pass!\n");
+    if(success){
+        printf("All tests pass!\n");
+    } else{
+        printf("Tests failed\n");
+    }
+    
     return 0;
 }
