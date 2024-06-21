@@ -5,9 +5,14 @@
 #include <memory>
 #include <cstdint>
 #include <string.h> //#include <cstring>
+#include <fstream>
+#include <vector>
 
 using std::string;
 using std::shared_ptr;
+using std::vector;
+using std::ifstream;
+using std::ofstream;
 
 
 #include "exceptionhandler.h"
@@ -34,6 +39,7 @@ enum PacketType: uint8_t{
   audio_mp4 = 14,
   video_mp4 = 15,
   video_mpeg = 16,
+  generic_file = 17,
  
 };
 
@@ -112,7 +118,8 @@ private:
 
 public:
   
-  Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr, string attachment_file_path = "");
+  Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr);
+  Packet(string attachment_file_path, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr);
   Packet(shared_ptr<uint8_t> buffer, shared_ptr<int> curr_buff_idx, int buff_total_len);
   //Packet(void *buffer);
   //Packet(const Packet &other); //copy constructor
@@ -125,6 +132,8 @@ public:
   void rebuild_header();
   void rebuild();
 
+  void process_input_file();
+  void output_to_file(uint8_t *data);
 
   bool is_build_done();
   bool is_build_pending();
@@ -139,6 +148,7 @@ public:
   int get_full_header_len(){ return this->full_hdr_len; }
   int get_payload_len() { return this->payload_len; }
   int get_pkt_len();
+  void set_buff_size(size_t buff_size) {this->buff_total_len = buff_size; }
 };
 
 

@@ -150,7 +150,7 @@ void SocketHelper::connect_to_host(){
 }
   
 
-bool SocketHelper::send_data(const uint8_t *data, int data_len){
+bool SocketHelper::send_data(const uint8_t *data, int data_len){ //TODO: will fail if sending over ~200k bytes fix to send larger 
   int bytes_sent_so_far = 0;
   int bytes_left_to_send = data_len;
   printf("Sending %d bytes of data to %s:%d ... ", data_len, this->host.c_str(), this->port);

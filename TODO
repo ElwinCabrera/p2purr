@@ -1,16 +1,21 @@
-windows port
-update build system
-utf-8 encoding for strings
-sanitizing data
+1. windows port
+2. update build system
+3. utf-8 encoding for strings
+4. sanitizing data
     no trailing white space
-add file attachment support
-compression  (already created a library for this just need to import it)
-fix warnings
-memory leak test
-    valgring is reporting:
+5. file attachment support (working)
+    need to find a good way of sending file name (for now its hardcodes as "out.txt")
+    need to handle edge cases like:
+        what happens if we send the same file twice and the the file already exists in that directory (should we overwrite the file, check the contents are the same and skip overwriting it, or make a make a copy with a same file_name + "_copy(x2)" ?)
+        what happens if the user has a file with same name
+
+5. compression  (already created a library for this just need to import it, I will do this after every feature is done)
+6. memory leak test
+    valgrind is reporting:
         "possibly lost: 304 bytes in 1 blocks"
         "still reachable: 32 bytes in 1 blocks"
     this is only happening when i start the server
     other than this no other leaks are present.
 
-code cleanup
+7. code cleanup
+8. fix warnings

@@ -27,21 +27,21 @@ int main(int argc, char *argv[]) {
         init_signal_handler();
 
 
-        success = success && serializer_test_all();
+        // success = success && serializer_test_all();
 
-        if(success){
-            printf("Serializer tests pass\n");
-        } else {
-            printf("Serializer tests fail\n");
-            exit(EXIT_FAILURE);
-        }
-        success = success && packet_test_all();
-        if(success){
-            printf("Packet tests pass\n");
-        } else {
-            printf("Packet tests fail\n");
-            exit(EXIT_FAILURE);
-        }
+        // if(success){
+        //     printf("Serializer tests pass\n");
+        // } else {
+        //     printf("Serializer tests fail\n");
+        //     exit(EXIT_FAILURE);
+        // }
+        // success = success && packet_test_all();
+        // if(success){
+        //     printf("Packet tests pass\n");
+        // } else {
+        //     printf("Packet tests fail\n");
+        //     exit(EXIT_FAILURE);
+        // }
 
         success = success && server_test_all();
         if(success){

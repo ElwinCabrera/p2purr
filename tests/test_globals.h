@@ -46,5 +46,8 @@ bool server_test_all();
 //helpers
 string get_all_ascii_chars();
 uint generate_random_num();
+void output_to_file(string file_name, char *data, int size);
+bool compare_files_equal(string file_path1, string file_path2);
+void delete_file(string file_name);
 
 #endif

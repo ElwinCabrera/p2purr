@@ -77,8 +77,9 @@ shared_ptr<Packet> PeerConnHandler::recv_pkt(){
     if(recv_len > 0 && *pos < recv_len){
       while(*pos < recv_len){
         if(this->current_pkt == nullptr){
-          this->current_pkt = shared_ptr<Packet>(new Packet(this->recv_buffer, this->curr_buff_idx, this->buff_size));
+          this->current_pkt = shared_ptr<Packet>(new Packet(this->recv_buffer, this->curr_buff_idx, recv_len));
         }
+        this->current_pkt->set_buff_size(recv_len);
         this->current_pkt->rebuild();
         if(this->current_pkt->is_build_done()){
           this->completed_pkts.push_back(current_pkt); //store all packets in an array until i figure out what to do with them

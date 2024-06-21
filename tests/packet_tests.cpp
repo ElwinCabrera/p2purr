@@ -8,13 +8,16 @@
 #include <string.h>
 #include <stdlib.h>
 
+
+
 using std::vector;
 using std::string;
 using std::to_string;
 using std::min;
 
 
-//TODO: implement the one in PeerConnHandler::recv_data()
+
+
 
 
 bool verify_header_integrity(Packet *pkt, uint8_t *expected_hdr_data, int len){
@@ -187,19 +190,142 @@ bool test_packet_circular_buffer(){
 
 
 
+bool test_packet_file_attachment(){
+    bool success = true;
+
+    string file_name = "test_file.txt";
+    string test_file_contents = get_all_ascii_chars();
+    output_to_file(file_name, test_file_contents.data(), test_file_contents.size());
+
+
+    Packet orig_pkt(file_name, PacketType::generic_file, PacketCharSet::utf8, PacketEncoding::elwin_enc, PacketCompression::_7zip, PacketEncryption::LAST);
+
+    success = success && verify_payload_integrity(&orig_pkt, (uint8_t*) test_file_contents.data(), test_file_contents.size());
+
+    Packet rebuilt_pkt = rebuild_pkt_from_pkt(orig_pkt, 1024);
+
+    success = success && verify_header_integrity(&rebuilt_pkt,  (uint8_t*)  orig_pkt.get_header(), orig_pkt.get_full_header_len());
+    success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
+
+    
+
+    delete_file(file_name);
+
+    if(success){
+        printf("packet file attachment test pass\n");
+    }
+
+    return success;
+
+}
+
+bool test_packet_large_file_attachment(){
+    bool success = true;
+
+    string file_name = "test_file.txt";
+    string test_file_contents = "";
+    size_t len_limit = 1073741824; // 1GB
+    while(test_file_contents.size() <= len_limit){
+        test_file_contents += get_all_ascii_chars();
+    }
+
+    output_to_file(file_name, test_file_contents.data(), test_file_contents.size());
+
+
+    Packet orig_pkt(file_name, PacketType::generic_file, PacketCharSet::utf8, PacketEncoding::elwin_enc, PacketCompression::_7zip, PacketEncryption::LAST);
+
+    success = success && verify_payload_integrity(&orig_pkt, (uint8_t*) test_file_contents.data(), test_file_contents.size());
+
+    Packet rebuilt_pkt = rebuild_pkt_from_pkt(orig_pkt, 1024);
+
+    success = success && verify_header_integrity(&rebuilt_pkt,  (uint8_t*)  orig_pkt.get_header(), orig_pkt.get_full_header_len());
+    success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
+
+    
+
+  
+    delete_file(file_name);
+
+    if(success){
+        printf("packet large file attachment test pass\n");
+    }
+
+    return success;
+
+}
+
+
+bool test_packet_large_file_attachment_circular_buffer(){
+    bool success = true;
+
+    string file_name = "test_file.txt";
+    string test_file_contents = "";
+    size_t len_limit = 1073741824; // 1GB
+    while(test_file_contents.size() <= len_limit){
+        test_file_contents += get_all_ascii_chars();
+    }
+
+    output_to_file(file_name, test_file_contents.data(), test_file_contents.size());
+
+
+    Packet orig_pkt(file_name, PacketType::generic_file, PacketCharSet::utf8, PacketEncoding::elwin_enc, PacketCompression::_7zip, PacketEncryption::LAST);
+
+    success = success && verify_payload_integrity(&orig_pkt, (uint8_t*) test_file_contents.data(), test_file_contents.size());
+
+
+    int buff_max_size = len_limit * 2;
+    int curr_buff_size = 3;
+    
+    while(curr_buff_size <= buff_max_size){
+        Packet rebuilt_pkt = rebuild_pkt_from_pkt(orig_pkt, curr_buff_size);
+
+        success = success && verify_header_integrity(&rebuilt_pkt,  (uint8_t*)  orig_pkt.get_header(), orig_pkt.get_full_header_len());
+        success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
+
+        ++curr_buff_size;
+    }
+
+    delete_file(file_name);
+
+    if(success){
+        printf("packet large file attachment circular buffer test pass\n");
+    }
+
+    return success;
+
+}
+
+
+
 bool packet_test_all(){
 
     if(!test_packet_data_integrity()){
-        printf("packet data integrity\n");
+        printf("packet data integrity test failed\n");
+        return false;
+    }
+    if(!test_packet_file_attachment()){
+        printf("packet file attachment test failed\n");
+        return false;
+    }
+    if(!test_packet_large_file_attachment()){
+        printf("packet large file attachment test failed\n");
         return false;
     }
 
     if(!test_packet_circular_buffer()){
-        printf("Packet circular buffer failed\n");
+        printf("Packet circular buffer test failed\n");
         return false;
     }
 
-    return  true;
+    if(!test_packet_large_file_attachment_circular_buffer()){
+        printf("Packet large file attachment circular buffer test failed\n");
+        return false;
+    }
+
+    
+    
+
+    return true;
 
 
 }

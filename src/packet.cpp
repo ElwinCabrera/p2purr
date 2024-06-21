@@ -43,7 +43,7 @@
 // }
 
 
-Packet::Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr, string attachment_file_path){
+Packet::Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr){
   if(payload == nullptr) {
     throw PacketException("cant create packet. payload is null\n");\
   }
@@ -56,7 +56,7 @@ Packet::Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet c
 
 
   
-  this->payload_len = payload_len; //TODO: will break
+  this->payload_len = payload_len; 
   this->payload = shared_ptr<uint8_t>((uint8_t*) malloc(this->payload_len + 1));
   this->payload.get()[this->payload_len] = '\0';
   memcpy(this->payload.get(), payload, this->payload_len);
@@ -65,7 +65,29 @@ Packet::Packet(uint8_t *payload, int payload_len, PacketType ct, PacketCharSet c
   this->header = shared_ptr<uint8_t>(nullptr);
 
   this->has_file_attachment = false;
-  if(attachment_file_path.compare("")) { // and path is valid i.e file exists
+  this->keepalive = true;
+
+  this->build();
+}
+
+
+Packet::Packet(string attachment_file_path, PacketType ct, PacketCharSet cs, PacketEncoding enc, PacketCompression compr, PacketEncryption encr){
+  this->type        = ct;
+  this->charset     = cs;
+  this->encoding    = enc;
+  this->encryption  = encr; 
+  this->compression = compr;
+
+
+  
+  this->payload_len = 0;
+  this->payload = shared_ptr<uint8_t>(nullptr);
+  this->built_pkt = shared_ptr<uint8_t>(nullptr);
+  this->header = shared_ptr<uint8_t>(nullptr);
+
+  this->has_file_attachment = false;
+  if(attachment_file_path.compare("") != 0) { // check if path is valid and extract file name
+    this->attachment_file_path = attachment_file_path;
     this->has_file_attachment = true;
   }
   this->keepalive = true;
@@ -114,6 +136,10 @@ uint8_t* Packet::build(){
   if(this->built_pkt.get() != nullptr) return this->built_pkt.get();
 
   this->set_build_pending(true);
+
+  if(this->has_file_attachment){
+    this->process_input_file();
+  }
   
   this->build_header();
 
@@ -245,6 +271,10 @@ void Packet::rebuild_header(){
     memset(this->payload.get(), '\0', this->payload_len);
   }
 
+  if(this->type == PacketType::generic_file) {
+    this->has_file_attachment = true;
+  }
+
   this->update_buff_idx();
   
 }
@@ -282,8 +312,15 @@ void Packet::rebuild(){
   if (num_bytes_remaining > 0){
     build_pending = true;
   } else if(num_bytes_remaining == 0){
+    
+    
+    if(this->has_file_attachment){
+      this->output_to_file(this->payload.get());
+    } else {
+      //this->make_pkt();
+    }
+    this->make_pkt(); // leaving here for now for testing and bc im lazy
     build_pending = false;
-    this->make_pkt();
   } else if(num_bytes_remaining < 0){
     throw PacketException("Something is wrong number of bytes remaining is negative\n");
   }
@@ -307,6 +344,41 @@ void Packet::make_pkt(){
 }
 
 
+void Packet::process_input_file(){
+
+   
+  ifstream in_file(this->attachment_file_path, std::ios::in | std::ios::binary);
+    
+  if(in_file.is_open()) {
+    vector<char> buffer; 
+    char temp_buff[1024]; 
+        
+    while (!in_file.eof()) {
+      in_file.read(temp_buff, sizeof(temp_buff)); 
+      buffer.insert(buffer.end(), temp_buff, temp_buff + in_file.gcount());
+    }
+    in_file.close();
+    this->payload_len = buffer.size();
+    this->payload = shared_ptr<uint8_t>((uint8_t*) malloc(this->payload_len));
+    memcpy(this->payload.get(), buffer.data(), this->payload_len);
+    } else {
+      printf("Unable to open file for reading!\n");
+    }
+}
+
+void Packet::output_to_file(uint8_t *data){
+    
+  ofstream out_file("out.txt", std::ios::out | std::ios::binary);
+    
+  if(out_file.is_open()) {
+    out_file.write((char*) data, this->payload_len);
+    out_file.close();
+  } else {
+    printf("Unable to open file for writing!\n");
+  }
+
+}
+
 void Packet::update_buff_idx(){
     int *curr_idx = this->curr_buff_idx.get();
     uint8_t *buff_head = this->buffer.get();
@@ -317,6 +389,9 @@ void Packet::update_buff_idx(){
     }
 
 }
+
+
+
 
 void Packet::update_local_buff_info(){
 

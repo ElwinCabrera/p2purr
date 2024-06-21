@@ -7,7 +7,7 @@ include(CheckSymbolExists)
 
 
 project(p2purr_chat 
-        VERSION 1.0
+        VERSION 1.0.0
         DESCRIPTION ""
         LANGUAGES CXX)
 
@@ -81,12 +81,16 @@ endif()
 
 
 file(GLOB SOURCE_FILES "src/*.cpp")
-set(SOURCE_FILES ${SOURCE_FILES} main.cpp)
 file(GLOB TEST_FILES "tests/*.cpp" "src/*.cpp")
-
 set(TEST_NAME ${PROJECT_NAME}_tests)
+
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
  
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
+#set(SOURCE_FILES ${SOURCE_FILES} main.cpp)
+#add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 add_executable(${TEST_NAME} ${TEST_FILES})
 
 
@@ -95,9 +99,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 #target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
-target_compile_options(${PROJECT_NAME} PRIVATE -g -Wall -Wextra -Wpedantic)
+target_compile_options(${PROJECT_NAME} PRIVATE -g -Wall -Wextra -Wpedantic -D_LIB)
 target_compile_options(${TEST_NAME} PRIVATE -g -Wall -Wextra -Wpedantic -D_TEST)
 #target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_BINARY_DIR}" )
+#target_link_libraries(${TEST_NAME} libtest-lib)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
