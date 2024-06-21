@@ -60,8 +60,9 @@ bool compare_files_equal(string file_path1, string file_path2){
       in_file2.read(buffer2, sizeof(buffer2));
 
       if(in_file1.gcount() != in_file2.gcount()) return false;
+      
       int idx = 0;
-      while(idx < sizeof(buffer1)){
+      while(idx < in_file1.gcount()){
         if(buffer1[idx] != buffer2[idx]) return false;
         ++idx;
       }
@@ -73,7 +74,7 @@ bool compare_files_equal(string file_path1, string file_path2){
     in_file2.close();
 
     if(bytes_read1 != bytes_read2) return false; //kinda redundant bc we are already checking inside for loop
-
+    
   } else {
     printf("Unable to open file for writing!\n");
   }

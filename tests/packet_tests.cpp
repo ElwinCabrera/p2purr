@@ -205,7 +205,8 @@ bool test_packet_file_attachment(){
     Packet rebuilt_pkt = rebuild_pkt_from_pkt(orig_pkt, 1024);
 
     success = success && verify_header_integrity(&rebuilt_pkt,  (uint8_t*)  orig_pkt.get_header(), orig_pkt.get_full_header_len());
-    success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
+    //success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
+    success = success && compare_files_equal(file_name, "out.txt");
 
     
 
@@ -239,8 +240,8 @@ bool test_packet_large_file_attachment(){
     Packet rebuilt_pkt = rebuild_pkt_from_pkt(orig_pkt, 1024);
 
     success = success && verify_header_integrity(&rebuilt_pkt,  (uint8_t*)  orig_pkt.get_header(), orig_pkt.get_full_header_len());
-    success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
-
+    //success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
+    success = success && compare_files_equal(file_name, "out.txt");
     
 
   
@@ -280,7 +281,8 @@ bool test_packet_large_file_attachment_circular_buffer(){
         Packet rebuilt_pkt = rebuild_pkt_from_pkt(orig_pkt, curr_buff_size);
 
         success = success && verify_header_integrity(&rebuilt_pkt,  (uint8_t*)  orig_pkt.get_header(), orig_pkt.get_full_header_len());
-        success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
+        //success = success && verify_payload_integrity(&rebuilt_pkt, (uint8_t*) orig_pkt.get_payload(), orig_pkt.get_payload_len());
+        success = success && compare_files_equal(file_name, "out.txt");
 
         ++curr_buff_size;
     }
@@ -321,9 +323,6 @@ bool packet_test_all(){
         printf("Packet large file attachment circular buffer test failed\n");
         return false;
     }
-
-    
-    
 
     return true;
 

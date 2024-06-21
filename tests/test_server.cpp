@@ -388,58 +388,58 @@ bool test_sending_large_file_attachment(){
 
 bool server_test_all(){
     
-    // if(!test_create_and_close_socket()) {
-    //     printf("Opening and Closing the socket failed\n");
-    //     return false;
-    // }
-    // if(!test_server_init()){
-    //     printf("Server initialization failed\n");
-    //     return false;
-    // }
-    // if(!test_server_start_stop()) {
-    //     printf("server smoke test failed\n");
-    //     return false;
-    // }
-
-    
-    // if(!test_server_client_connection()) {
-    //     printf("server client connection failed\n");
-    //     return false;
-    // }
-
-    
-    // if(!test_multiple_client_connected_no_sending_data()) {
-    //     printf("server multiple client connections failed (with server ending communications with clients)\n");
-    //     return false;
-    // };
-
-    // if(!test_multiple_client_connected_no_sending_data2()) {
-    //     printf("server multiple client connections failed (with clients ending communications with server)\n");
-    //     return false;
-    // };
-
-    
-    // if(!test_server_send_receive()) {
-    //     printf("Server send and receive failed\n");
-    //     return false;
-    // }
-
-    if(test_sending_large_file_attachment()){
-        printf("Server sending large file attachment failed\n");
-        return true;
+    if(!test_create_and_close_socket()) {
+        printf("Opening and Closing the socket failed\n");
+        return false;
+    }
+    if(!test_server_init()){
+        printf("Server initialization failed\n");
+        return false;
+    }
+    if(!test_server_start_stop()) {
+        printf("server smoke test failed\n");
+        return false;
     }
 
     
-    // if(!test_multiple_client_send()) {
-    //     printf("Server multiple client send failed\n");
-    //     return false;
-    // }
+    if(!test_server_client_connection()) {
+        printf("server client connection failed\n");
+        return false;
+    }
 
     
-    // if(!test_p2p_connection()) {
-    //     printf("p2p connection failed\n");
-    //     return false;
-    // }
+    if(!test_multiple_client_connected_no_sending_data()) {
+        printf("server multiple client connections failed (with server ending communications with clients)\n");
+        return false;
+    }
+
+    if(!test_multiple_client_connected_no_sending_data2()) {
+        printf("server multiple client connections failed (with clients ending communications with server)\n");
+        return false;
+    }
+
+    
+    if(!test_server_send_receive()) {
+        printf("Server send and receive failed\n");
+        return false;
+    }
+
+    if(!test_sending_large_file_attachment()){
+        printf("Server sending large file attachment failed\n");
+        return false;
+    }
+
+    
+    if(!test_multiple_client_send()) {
+        printf("Server multiple client send failed\n");
+        return false;
+    }
+
+    
+    if(!test_p2p_connection()) {
+        printf("p2p connection failed\n");
+        return false;
+    }
 
 
     // if(!test_p2p_communication()) {

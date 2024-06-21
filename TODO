@@ -16,6 +16,8 @@
         "still reachable: 32 bytes in 1 blocks"
     this is only happening when i start the server
     other than this no other leaks are present.
+7. fix send method (for now its ok but should really get around to it)
 
-7. code cleanup
-8. fix warnings
+8. code cleanup
+    * Currently we are storing all packets in an array, for now its ok as we are still experimenting but in production the program will eventually start to consume a lot of memory.
+9. fix warnings
